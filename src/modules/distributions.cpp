@@ -242,11 +242,11 @@ void run()
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/DeltaPhiMETjet100",";#Delta#phi(%MET,jet_{i} PT > 100 GeV);EventsBIN",32,0,3.2);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/vecHTPt",";HT PT;Events / bin",{0,300,600,1000,1010},{20,30,50,10});
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/ph1Pt",";#gamma_{1} PT;Events / bin",{0,300,600,1000,1500},{20,30,50,100});
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/MET",";MET;Events / bin",{0,100,400,500,1000,1010},{20,30,50,100,10});
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETph",";|#Delta#phi|(%MET,#gamma_{1});EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETjet",";|#Delta#phi|(%MET,jet_{1});EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJet",";|#Delta#phi|(%MET,nearest jet);EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/MET",";p_{T}^{miss};Events / bin",{0,100,400,500,1000,1010},{20,30,50,100,10});
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETph",";|#Delta#phi|(p_{T}^{miss},#gamma_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETjet",";|#Delta#phi|(p_{T}^{miss},jet_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJet",";|#Delta#phi|(p_{T}^{miss},nearest jet);EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh",";|#Delta#phi|(p_{T}^{miss},nearest jet/#gamma);EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh_phoPtl500",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh_phoPtl700",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);   
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh_phoPtg700",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);   
@@ -279,27 +279,27 @@ void run()
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/MT"    ,";MT(#gamma_{1},%MET);EventsBIN",150,0,1500);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/Nj"    ,";N_{jets};EventsBIN"     ,8,0-0.5,8-0.5);
 
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/absphiMETjet",";|#Delta#phi|(%MET,jet_{1});EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/absphiMETnJetPh",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/absphiMETjet",";|#Delta#phi|(p_{T}^{miss},jet_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/absphiMETnJetPh",";|#Delta#phi|(p_{T}^{miss},nearest jet/#gamma);EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/STg"   ,";STg;EventsBIN"           ,150,0,1500);
 
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/absphiMETjet",";|#Delta#phi|(%MET,jet_{1});EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/absphiMETnJetPh",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/absphiMETjet",";|#Delta#phi|(p_{T}^{miss},jet_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/absphiMETnJetPh",";|#Delta#phi|(p_{T}^{miss},nearest jet/#gamma);EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/STg"   ,";STg;EventsBIN"           ,150,0,1500);
 
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/absphiMETjet",";|#Delta#phi|(%MET,jet_{1});EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/absphiMETnJetPh",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/absphiMETjet",";|#Delta#phi|(p_{T}^{miss},jet_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/absphiMETnJetPh",";|#Delta#phi|(p_{T}^{miss},nearest jet/#gamma);EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/STg"   ,";STg;EventsBIN"           ,150,0,1500);
         
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/absphiMETjet",";|#Delta#phi|(%MET,jet_{1});EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/absphiMETnJetPh",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/absphiMETjet",";|#Delta#phi|(p_{T}^{miss},jet_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/absphiMETnJetPh",";|#Delta#phi|(p_{T}^{miss},nearest jet/#gamma);EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/STg"   ,";STg;EventsBIN"           ,150,0,1500);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/relPt2Jets",";relative Pt of 2 lead. jets;EventsBIN",25,0,1);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/DeltaS",";Delta S;EventsBIN",32,0,3.2);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/DeltaS1",";Delta S1;EventsBIN",32,0,3.2);
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/MT"    ,";MT(#gamma_{1},%MET);EventsBIN",150,0,1500);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/MT"    ,";MT(#gamma_{1},p_{T}^{miss});EventsBIN",150,0,1500);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/ph1Pt",";#gamma_{1} PT;Events / bin",{0,300,600,1000,1010},{20,30,50,10});
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/MET",";MET;Events / bin",{0,100,400,500,1000,1010},{20,30,50,100,10});
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/MET",";p_{T}^{miss};Events / bin",{0,100,400,500,1000,1010},{20,30,50,100,10});
    
    ADD_HIST("pre_ph165/c_MET100/MT100/METl400vMTl400/ph1Pt",";#gamma_{1} PT;Events / bin",{0,300,600,1000,1010},{20,30,50,10});
    ADD_HIST("pre_ph165/c_MET100/MT100/METl400vMTl400/MET",";MET;Events / bin",{0,100,400,500,1000,1010},{20,30,50,100,10});
@@ -509,25 +509,25 @@ void run()
    ADD_HIST("pre_ph165/c_MET300/MT300/STg600/ph1Pt"   ,";#gamma_{1} PT;EventsBIN",150,0,1500);   
    ADD_HIST("pre_ph165/c_MET300/MT300/STg600/r9",";R_{9}(#gamma)",110,0,1.1);  
    ADD_HIST("pre_ph165/c_MET300/MT300/STg600/r9_Stgg1300",";R_{9}(#gamma)",110,0,1.1);
-   ADD_HIST("pre_ph165/c_MET300/MT300/STg600/absphiMETph",";|#Delta#phi|(%MET,#gamma_{1});EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET300/MT300/STg600/MET",";MET;EventsBIN",150,0,1500);
-   ADD_HIST("pre_ph165/c_MET300/MT300/STg600/DeltaPhiMETjet100",";#Delta#phi(%MET,jet_{i} PT > 100 GeV);EventsBIN",32,0,3.2);
+   ADD_HIST("pre_ph165/c_MET300/MT300/STg600/absphiMETph",";|#Delta#phi|(p_{T}^{miss},#gamma_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET300/MT300/STg600/MET",";p_{T}^{miss};EventsBIN",150,0,1500);
+   ADD_HIST("pre_ph165/c_MET300/MT300/STg600/DeltaPhiMETjet100",";#Delta#phi(p_{T}^{miss},jet_{i} PT > 100 GeV);EventsBIN",32,0,3.2);
 
 
-   ADD_HIST("pre_ph165/c_MET300/MT300/absphiMETHT",";|#Delta#phi|(%MET,#vec{HT});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET300/MT300/absphiMETHT",";|#Delta#phi|(p_{T}^{miss},#vec{HT});EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET300/MT300/absphiPhHT",";|#Delta#phi|(#gamma_{1},#vec{HT});EventsBIN",50,0,5);
 
    ADD_HIST("pre_ph165/c_MET300/MT300/STg600/dPhiMETPhg03/STg",";STg;EventsBIN"           ,300,0,3000);
    ADD_HIST("pre_ph165/c_MET300/MT300/STg600/dPhiMETPhg03/ph1Pt",";#gamma_{1} PT;EventsBIN",150,0,1500);   
-   ADD_HIST("pre_ph165/c_MET300/MT300/STg600/dPhiMETPhg03/MET",";MET;EventsBIN",150,0,1500);
+   ADD_HIST("pre_ph165/c_MET300/MT300/STg600/dPhiMETPhg03/MET",";p_{T}^{miss};EventsBIN",150,0,1500);
    
    // validation region
    ADD_HIST("pre_ph165/c_S80/MT300/STgl600/ph1Pt",";#gamma_{1} PT;EventsBIN",100,0,1000);
-   ADD_HIST("pre_ph165/c_S80/MT300/STgl600/MET",";MET;EventsBIN",100,0,1000);
+   ADD_HIST("pre_ph165/c_S80/MT300/STgl600/MET",";p_{T}^{miss};EventsBIN",100,0,1000);
    ADD_HIST("pre_ph165/c_S80/MT300/STgl600/METS",";METSIG;EventsBIN",200,100,2100);
-   ADD_HIST("pre_ph165/c_S80/MT300/STgl600/MT",";MT(#gamma_{1},%MET);EventsBIN",150,0,1500);
-   ADD_HIST("pre_ph165/c_S80/MT300/STgl600/absphiMETph",";|#Delta#phi|(%MET,#gamma_{1});EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_S80/MT300/STgl600/absphiMETjet",";|#Delta#phi|(%MET,jet_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_S80/MT300/STgl600/MT",";MT(#gamma_{1},p_{T}^{miss});EventsBIN",150,0,1500);
+   ADD_HIST("pre_ph165/c_S80/MT300/STgl600/absphiMETph",";|#Delta#phi|(p_{T}^{miss},#gamma_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_S80/MT300/STgl600/absphiMETjet",";|#Delta#phi|(p_{T}^{miss},jet_{1});EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_S80/MT300/STgl600/HT"    ,";HT;EventsBIN"            ,150,0,1500);
    ADD_HIST("pre_ph165/c_S80/MT300/STgl600/METSHT",";METSHT;EventsBIN"        ,100,0,100);
    ADD_HIST("pre_ph165/c_S80/MT300/STgl600/STg"   ,";STg;EventsBIN"           ,200,0,2000);
@@ -537,11 +537,11 @@ void run()
 
    // validation region 2016
    ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/ph1Pt",";#gamma_{1} PT;EventsBIN",100,0,1000);
-   ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/MET",";MET;EventsBIN",100,0,1000);
-   ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/MT",";MT(#gamma_{1},%MET);EventsBIN",150,0,1500);
-   ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/absphiMETph",";|#Delta#phi|(%MET,#gamma_{1});EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/absphiMETjet",";|#Delta#phi|(%MET,jet_{1});EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/absphiMETnJetPh",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/MET",";p_{T}^{miss};EventsBIN",100,0,1000);
+   ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/MT",";MT(#gamma_{1},p_{T}^{miss});EventsBIN",150,0,1500);
+   ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/absphiMETph",";|#Delta#phi|(p_{T}^{miss},#gamma_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/absphiMETjet",";|#Delta#phi|(p_{T}^{miss},jet_{1});EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/absphiMETnJetPh",";|#Delta#phi|(p_{T}^{miss},nearest jet/#gamma);EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/STg"   ,";STg;EventsBIN"           ,200,0,2000);
    ADD_HIST("pre_ph165/c_MET300/MT300/STgl600/METdotPh",";%VMET#upoint%VPT(#gamma_{1}) [GeV^{2}];EventsBIN",50,-100000,100000);     
 
@@ -550,21 +550,21 @@ void run()
    // HLT_PFMET170
 
    hist::Histograms<TH2F> h2s(vsDatasubsets);
-   h2s.addHist("METS MT",";METSIG;MT(#gamma_{1},%MET);Events / bin",40,0,2000,40,0,2000);
+   h2s.addHist("METS MT",";METSIG;MT(#gamma_{1},p_{T}^{miss});Events / bin",40,0,2000,40,0,2000);
    h2s.addHist("METS pt",";METSIG;#gamma_{1} PT;Events / bin",40,0,2000,40,0,1000);
    h2s.addHist("METS MET",";METSIG;MET;Events / bin",40,0,2000,40,0,1000);
-   h2s.addHist("METSHT MT",";METSHT;MT(#gamma_{1},%MET);Events / bin",40,0,80,40,0,2000);
+   h2s.addHist("METSHT MT",";METSHT;MT(#gamma_{1},p_{T}^{miss});Events / bin",40,0,80,40,0,2000);
    h2s.addHist("METSHT METS",";METSHT;METSIG;Events / bin",40,0,80,40,0,2000);
    h2s.addHist("Iso/ec",";#gamma_{1} PT;EcalPFCluster Iso [GeV];Events / bin",50,0,1000,50,0,40);
    h2s.addHist("Iso/hc",";#gamma_{1} PT;HcalPFCluster Iso [GeV];Events / bin",50,0,1000,50,0,40);
    h2s.addHist("Iso/tr",";#gamma_{1} PT;SC Track Iso [GeV];Events / bin",50,0,1000,50,0,40);
    h2s.addHist("pt MET",";#gamma_{1} PT;MET;Events / bin",50,0,1000,50,0,1000);
-   h2s.addHist("pt MT",";#gamma_{1} PT;MT(#gamma_{1},%MET);Events / bin",50,0,1000,40,0,2000);
+   h2s.addHist("pt MT",";#gamma_{1} PT;MT(#gamma_{1},p_{T}^{miss});Events / bin",50,0,1000,40,0,2000);
    h2s.addHist("Ngl Ngpix",";N_{#gamma loose};N_{#gamma pix};Events / bin",5 ,-.5, 5-.5,5 ,-.5, 5-.5);
    
-   h2s.addHist("pre_ph165/MET MT",";MET;MT(#gamma_{1},%MET);Events / bin",50,0,1000,50,0,1000);  
-   h2s.addHist("pre_ph165/dPhiMETph pt",";|#Delta#phi|(%MET,#gamma_{1});PT;Events / bin",32,0,3.2,50,0,1000);
-   h2s.addHist("pre_ph165/METS MT",";METSIG;MT(#gamma_{1},%MET);Events / bin",50,0,500,50,0,1000);
+   h2s.addHist("pre_ph165/MET MT",";MET;MT(#gamma_{1},p_{T}^{miss});Events / bin",50,0,1000,50,0,1000);  
+   h2s.addHist("pre_ph165/dPhiMETph pt",";|#Delta#phi|(p_{T}^{miss},#gamma_{1});PT;Events / bin",32,0,3.2,50,0,1000);
+   h2s.addHist("pre_ph165/METS MT",";METSIG;MT(#gamma_{1},p_{T}^{miss});Events / bin",50,0,500,50,0,1000);
    h2s.addHist("pre_ph165/c_S100/MT300/METS STg",";METSIG;STg;Events / bin",200,100,2100,200,0,2000);
    h2s.addHist("pre_ph165/c_S80/MT300/METS STg",";METSIG;STg;Events / bin",200,100,2100,200,0,2000);
 
@@ -602,6 +602,7 @@ void run()
       TTreeReaderValue<std::vector<tree::Electron>> electrons(reader, "electrons");
       TTreeReaderValue<std::vector<tree::Jet>>      jets     (reader, "jets");
       TTreeReaderValue<std::vector<tree::GenParticle>> genParticles(reader, "genParticles");
+      TTreeReaderValue<std::vector<tree::IntermediateGenParticle>> intermediateGenParticles(reader, "intermediateGenParticles");     
       TTreeReaderValue<std::vector<tree::Particle>> triggerObjects(reader, "hltEG165HE10Filter");
       TTreeReaderValue<tree::MET> MET(reader, "met");
       TTreeReaderValue<tree::MET> MET_JESu(reader, "met_JESu");
@@ -659,6 +660,11 @@ void run()
                if (ph.isTight15)  tPho15.push_back(&ph);                        
             }
          }
+         debug << "here";
+         for (auto const &IgenP: *intermediateGenParticles){
+            std::cout << "n intermed:  " << IgenP.p.Pt() << " " << IgenP.pdgId << std::endl;
+            }
+         debug << "here";
 
          hs_notPix.fill("pre/Ngl",lPho.size());
          hs_notPix.fill("pre/Ngl15",lPho15.size());         
@@ -666,6 +672,8 @@ void run()
          hs_notPix.fill("pre/Ngt",tPho.size());
          hs_notPix.fill("pre/Ngpix",lPixPho.size());
          h2s.fill("Ngl Ngpix",lPho.size(),lPixPho.size());
+
+
 
          // independent of "normal"/"pixel" run
          // jet related
@@ -876,7 +884,6 @@ void run()
             } 
 
 
-            // different preselections (for different trigger options)
             if (phoPt>180 && (!isData || (*trigger_Ph && triggerMatch))){
             
                for (auto const &jet: cjets) {

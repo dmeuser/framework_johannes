@@ -25,35 +25,35 @@ static io::RootFileSaver saver("plots.root","SFapplication");
 static io::Logger logFile("SFapplication.log");
 
 
-float Vg_JES_bin1 = 0.053425;
-float Vg_JES_bin2 = 0.048425;
-float Vg_JES_bin3 = 0.039086;
-float Vg_JES_bin4 = 0.046930;
+float Vg_JES_bin1 = 0.059295;
+float Vg_JES_bin2 = 0.055648;
+float Vg_JES_bin3 = 0.053110;
+float Vg_JES_bin4 = 0.050381;
 
-float GJ_JES_bin1 = 0.022336;
-float GJ_JES_bin2 = 0.043804;
-float GJ_JES_bin3 = 0.043238;
-float GJ_JES_bin4 = 0.449069;
+float GJ_JES_bin1 = 0.009304;
+float GJ_JES_bin2 = 0.070263;
+float GJ_JES_bin3 = 0.070263;
+float GJ_JES_bin4 = 0.323459;
 
-float Vg_mu_bin1 = 0.045273;
-float Vg_mu_bin2 = 0.064142;
-float Vg_mu_bin3 = 0.074932;
-float Vg_mu_bin4 = 0.098386;
+float Vg_mu_bin1 = 0.038008;
+float Vg_mu_bin2 = 0.054549;
+float Vg_mu_bin3 = 0.065654;
+float Vg_mu_bin4 = 0.090400;
 
-float Vg_pdf_bin1 = 0.0165178;
-float Vg_pdf_bin2 = 0.0292389;
-float Vg_pdf_bin3 = 0.0339644;
-float Vg_pdf_bin4 = 0.0530947;
+float Vg_pdf_bin1 = 0.0159707;
+float Vg_pdf_bin2 = 0.0200078;
+float Vg_pdf_bin3 = 0.0244478;
+float Vg_pdf_bin4 = 0.0382614;
 
-float GJ_mu_bin1 = 0.043224;
-float GJ_mu_bin2 = 0.037132;
-float GJ_mu_bin3 = 0.054357;
-float GJ_mu_bin4 = 0.060463;
+float GJ_mu_bin1 = 0.051947;
+float GJ_mu_bin2 = 0.027569;
+float GJ_mu_bin3 = 0.054835;
+float GJ_mu_bin4 = 0.071058;
 
-float GJ_pdf_bin1 = 0.0385493;
-float GJ_pdf_bin2 = 0.0175165;
-float GJ_pdf_bin3 = 0.0707174;
-float GJ_pdf_bin4 = 0.0648986;
+float GJ_pdf_bin1 = 0.0815288;
+float GJ_pdf_bin2 = 0.0255214;
+float GJ_pdf_bin3 = 0.0192825;
+float GJ_pdf_bin4 = 0.0512977;
 
 class Rebinner
 {
@@ -322,6 +322,7 @@ void plot(TString sSelection,TString sVar,int iRebin,
    }
    TH1F hStatErr(hStackSum);
    hStatErr.SetMarkerSize(0);
+   std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!" << hStatErr.GetBinError(1) << std::endl;
    TH1F hSystErr(hStatErr);
    float erri, error_scale_Vg, error_scale_GJ, error_corr;
    float eVg,eGJ,eVg_mu,eGJ_mu,eVg_pdf,eGJ_pdf;
@@ -398,46 +399,62 @@ void plot(TString sSelection,TString sVar,int iRebin,
          eGJ = util::quadSum<double>({eGJ,error_scale_GJ});
       }         
       erri=eVg + eGJ; //components are already squared
-      std::cout << "bin number:  " << i << std::endl;
-      std::cout << "yield and syst uncert Vgamma:  " << hVg.GetBinContent(i) << "$\%$" << TMath::Sqrt(eVg) << std::endl;
-      std::cout << "yield and syst uncert gammaJets:  " << hGJ.GetBinContent(i) << "$\%$" << TMath::Sqrt(eGJ) << std::endl;
-      std::cout << "syst error squared:  " << erri << "   correlation error squared:  " << error_corr << std::endl;
-      std::cout << "correlation error fraction:  " << error_corr/erri << std::endl;
+           std::cout << "bin number:  " << i << std::endl;
+      std::cout << "yield and syst uncert Vgamma:  " << hVg.GetBinContent(i) << "$\\pm$" << TMath::Sqrt(eVg) << std::endl;
+      std::cout << "yield and syst uncert gammaJets:  " << hGJ.GetBinContent(i) << "$\\pm$" << TMath::Sqrt(eGJ) << std::endl;
+      //std::cout << "syst error squared:  " << erri << "   correlation error squared:  " << error_corr << std::endl;
+     // std::cout << "correlation error fraction:  " << error_corr/erri << std::endl;
       erri+=error_corr;
       hSystErr.SetBinError(i,TMath::Sqrt(erri));
    }
+
    // syst. uncert. from fixed backgrounds
    for (TString sSample:{"efake","TTcomb","diboson"}){
       TH1F const &h=fixHists[sSample];
       float const uncert=cfg.datasets.getSystUncert(sSample);
       for (int i=0; i<=hSystErr.GetNbinsX()+1;i++){
          erri=h.GetBinContent(i)*uncert;
-         std::cout << "bin number:  " << i << std::endl;
+         std::cout << "bin number:  " << i;
          if (sSample == "efake"){
-            std::cout << "yield and syst uncert efake:  " << h.GetBinContent(i) << "$\%$" << erri << std::endl;
+            std::cout << "  yield and syst uncert efake:  " << h.GetBinContent(i) << "$\\pm$" << erri << std::endl;
             }
          else if (sSample == "TTcomb"){
-            std::cout << "yield and syst uncert TTcomb:  " << h.GetBinContent(i) << "$\%$" << erri << std::endl;
+            std::cout << "  yield and syst uncert TTcomb:  " << h.GetBinContent(i) << "$\\pm$" << erri << std::endl;
             }
          else if (sSample == "diboson"){
-            std::cout << "yield and syst uncert diboson:  " << h.GetBinContent(i) << "$\%$" << erri << std::endl;
+            std::cout << "  yield and syst uncert diboson:  " << h.GetBinContent(i) << "$\\pm$" << erri << std::endl;
             }
          erri=util::sqrtQuadSum<double>({erri,hSystErr.GetBinError(i)});
          hSystErr.SetBinError(i,erri);
+         std::cout << "bin syst error total: " << erri << std::endl;
+         std::cout << "bin stat error total: " << hStatErr.GetBinError(i) << std::endl;         
          comb_uncert = util::sqrtQuadSum<double>({hStatErr.GetBinError(i),hSystErr.GetBinError(i)});
-         hStatErr.SetBinError(i,comb_uncert);
+         //hStatErr is now total error!
+       //  hStatErr.SetBinError(i,comb_uncert);
+         std::cout << "bin total error total: " << comb_uncert << std::endl;
+         
       }
    }
 
+   for (int i=0; i<=hSystErr.GetNbinsX()+1;i++){
+      std::cout << "!!!!!!!!!BIN!!!!!!!!!!!" << i << std::endl;
+      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!" << hStatErr.GetBinError(i) << std::endl;
+      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!" << hSystErr.GetBinError(i) << std::endl;
+      hStatErr.SetBinError(i, util::sqrtQuadSum<double>({hStatErr.GetBinError(i),hSystErr.GetBinError(i)}));
+      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!" << hStatErr.GetBinError(i) << std::endl;
+   }
+
    // store separate background uncertainties
-   if (plotMode==SR) {
+   if (plotMode==SR  && sVar=="STg") {
       for (int i=0; i<=hSystErr.GetNbinsX()+1;i++){
          std::map<TString,SignalBin::Component> &bini=signalBins[i].component;
          bini["Vg"].count=hVg.GetBinContent(i);
+         std::cout << "bin:  " << i << "  Vgamma yield and stat uncert:  " << hVg.GetBinContent(i) << "$\\pm$" << hVg.GetBinError(i)<< std::endl;
          bini["Vg"].estat=hVg.GetBinError(i);
          bini["Vg"].esyst=hVg.GetBinContent(i)*cfg.sf.e_Vg/cfg.sf.Vg;
 
          bini["GJ"].count=hGJ.GetBinContent(i);
+         std::cout << "bin:  " << i << "  gammaJets yield and stat uncert:  " << hGJ.GetBinContent(i) << "$\\pm$" << hGJ.GetBinError(i)<< std::endl;
          bini["GJ"].estat=hGJ.GetBinError(i);
          bini["GJ"].esyst=hGJ.GetBinContent(i)*cfg.sf.e_GJ/cfg.sf.GJ;
 
@@ -447,8 +464,17 @@ void plot(TString sSelection,TString sVar,int iRebin,
          for (TString sSample:{"efake","TTcomb","diboson"}){
             bini[sSample].count=fixHists[sSample].GetBinContent(i);
             bini[sSample].estat=fixHists[sSample].GetBinError(i);
-            bini[sSample].esyst=fixHists[sSample].GetBinContent(i)*cfg.datasets.getSystUncert(sSample);
-         }
+            if (sSample == "efake"){
+               std::cout << "bin:  " << i << "  efake yield and stat uncert:  " << fixHists[sSample].GetBinContent(i) << "$\\pm$" << fixHists[sSample].GetBinError(i) << std::endl;
+               }
+            else if (sSample == "TTcomb"){
+               std::cout << "bin:  " << i << "  TTcomb yield and stat uncert:  " << fixHists[sSample].GetBinContent(i) << "$\\pm$" << fixHists[sSample].GetBinError(i)<< std::endl;
+               }
+            else if (sSample == "diboson"){
+               std::cout << "bin:  " << i << "  diboson yield and stat uncert:  " << fixHists[sSample].GetBinContent(i) << "$\\pm$" << fixHists[sSample].GetBinError(i)<< std::endl;
+               }
+               bini[sSample].esyst=fixHists[sSample].GetBinContent(i)*cfg.datasets.getSystUncert(sSample);
+            }
          for (TString sSample:{"TChiWG","T5Wg"}) {
             signalBins_signal[i].component[sSample].count=fixHists[sSample].GetBinContent(i);
             signalBins_signal[i].component[sSample].estat=fixHists[sSample].GetBinError(i);
@@ -534,6 +560,9 @@ void plot(TString sSelection,TString sVar,int iRebin,
     hSystErr.SetFillColor(kGray);
     hSystErr.SetLineColor(kWhite);
     hSystErr.Draw("same e2");
+
+   std::cout << bkgIntegral.formatBlock(false,true) << std::endl;
+   
     le.append(hSystErr,"#sigma_{syst}","f");
    if (showData) hData.Draw("same pe1");
    spcan.pU_.RedrawAxis();
@@ -630,6 +659,9 @@ void plot(TString sSelection,TString sVar,int iRebin,
          texSummary*TString::Format(" %6.1f & \\pm%6.1f & \\pm%6.1f &",tot.count,tot.estat,esy);
          texSummary<<TString::Format("%6.0f \\\\",signalBins[iBin].component["data"].count);
       }
+      for (int i = 0; i < hSystErr.GetNbinsX(); i++){
+         std::cout << signalBins[i].formatBlock(false,true) << std::endl;
+      }
       texSummary<<"\\end{tabular}";
       io::Logger texFile((sVar+"-integral.tex").Data());
       texFile<<"\\begin{tabular}{lrrrr}";
@@ -670,7 +702,7 @@ void plot(TString sSelection,TString sVar,
 extern "C"
 void run()
 {
-   
+   /*
    plot("pre_ph165/","METdotPh",{-100000,100000},{4000},CR);
    plot("pre_ph165/","METdotJet",{-100000,100000},{4000},CR);
    plot("pre_ph165/","absphiMETHT",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
@@ -687,7 +719,9 @@ void run()
  
    plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","ph1Pt",{0,300,500,600,1000,1100},{20,50,100,200,100},CR);
  //  plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","ph1Pt",{0,500,750,1000,1300},{500,250,250,300},CR);
-   
+
+   */
+   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","ph1Pt",{0,300,500,600,1000,1100},{20,50,100,200,100},CR);
    plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","MET",{80,100,250,350},{20,30,100},CR);
    plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETph",{0,1.8,2.6,3.3},{0.1,.2,.1},CR);
    plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.8,3.2},{.2,.4},CR);
@@ -828,8 +862,8 @@ void run()
    plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
    plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","MT",{100,250,400,600,700,900},{150,20,50,100,200},CR);
    plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","Nph",1,CR);
-
-
+*/
+/*
    // Validation region
    plot("pre_ph165/c_S80/MT300/STgl600/","ph1Pt",{140,300,400},{20,50},VR);
    plot("pre_ph165/c_S80/MT300/STgl600/","MET",{100,280,380},{30,50},VR);
@@ -847,7 +881,8 @@ void run()
    */
 
    //Validation region 2016
-   plot("pre_ph165/c_MET300/MT300/STgl600/","STg",{260,620},{20},VR);   
+   
+   plot("pre_ph165/c_MET300/MT300/STgl600/","STg",{400,620},{20},VR);   
    plot("pre_ph165/c_MET300/MT300/STgl600/","ph1Pt",{140,300,400},{20,50},VR);
    plot("pre_ph165/c_MET300/MT300/STgl600/","MET",{100,280,380},{30,50},VR);
    plot("pre_ph165/c_MET300/MT300/STgl600/","MT",{100,280,400,600,700,900},{180,120,50,100,200},VR);  
@@ -866,7 +901,7 @@ void run()
    plot("pre_ph165/c_S80/MT300/","METS",5,SR_BLIND);
    plot("pre_ph165/c_S80/MT300/","HT",5,SR_BLIND);
    plot("pre_ph165/c_S80/MT300/","METSHT",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","STg",5,SR_BLIND);*/
+   plot("pre_ph165/c_S80/MT300/","STg",5,SR_BLIND);
    plot("pre_ph165/c_MET300/MT300/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
    plot("pre_ph165/c_MET300/MT300/","STg",{480,600,800,1000,1300,1600},{120,200,200,300,300},SR);  
    plot("pre_ph165/c_MET300/MT300/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},SR);
@@ -901,17 +936,15 @@ void run()
 */
    // further SR distributions with data
 
-   //2016
-   plot("pre_ph165/c_MET300/MT300/STg600/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);  
+   //2016 
    plot("pre_ph165/c_MET300/MT300/STg600/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
-   plot("pre_ph165/c_MET300/MT300/STg600/","ph1Pt",{0,700,1500},{100,200},SR);
-   plot("pre_ph165/c_MET300/MT300/STg600/","MET",{0,700,1500},{100,200},SR);
-   plot("pre_ph165/c_MET300/MT300/STg600/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},SR);
-   plot("pre_ph165/c_MET300/MT300/STg600/","r9",{0,1.1},{0.05},SR);
-   plot("pre_ph165/c_MET300/MT300/STg600/","r9_Stgg1300",{0,1.1},{0.05},SR);
-   plot("pre_ph165/c_MET300/MT300/STg600/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
-   plot("pre_ph165/c_MET300/MT300/STg600/","METdotPh",{-100000,-90000,100000},{5000,19000},SR);
-   plot("pre_ph165/c_MET300/MT300/STg600/","DeltaPhiMETjet100",{0,3.2},{.1},SR);
+//   plot("pre_ph165/c_MET300/MT300/STg600/","ph1Pt",{0,700,1500},{100,200},SR);
+//   plot("pre_ph165/c_MET300/MT300/STg600/","MET",{0,700,1500},{100,200},SR);
+//   plot("pre_ph165/c_MET300/MT300/STg600/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},SR);
+ //  plot("pre_ph165/c_MET300/MT300/STg600/","r9",{0,1.1},{0.05},SR);
+//   plot("pre_ph165/c_MET300/MT300/STg600/","r9_Stgg1300",{0,1.1},{0.05},SR);
+ //  plot("pre_ph165/c_MET300/MT300/STg600/","METdotPh",{-100000,-90000,100000},{5000,19000},SR);
+//   plot("pre_ph165/c_MET300/MT300/STg600/","DeltaPhiMETjet100",{0,3.2},{.1},SR);
   
    
    //2015

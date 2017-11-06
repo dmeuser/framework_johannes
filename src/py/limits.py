@@ -11,7 +11,7 @@ backgrounds=["GJ","TTcomb","Vg","diboson","efake"]
 class Scan:
     T5gg,T5Wg,T6Wg,T6gg,GGM,TChiWg,TChiNg=range(7)
 
-def prepareDatacard(obs,count,estat,esyst,correlated,mcUncertainties,pointName):
+def prepareDatacard(obs,count,estat,esyst,eISR,correlated,mcUncertainties,pointName):
     dataCardPath="/tmp/datacard_%s.txt"%pointName
     nBins=len(obs)
     card="# "+pointName
@@ -68,6 +68,16 @@ observation          """%nBins
             card+="%10.2f "%e
             card+=fill*(len(allProc)-index-1)
         card+="\n"
+    for b,errors in eISR.iteritems():
+        index=allProc.index(b)
+        name="ISRsyst_%s"%b
+        card+="%-16s lnN "%name
+        # looping bins
+        for e in errors:
+            card+=fill*index
+            card+="%10.2f "%e
+            card+=fill*(len(allProc)-index-1)
+        card+="\n"
     # correlated part of systematic uncertainties
     corr={}
     name="cor_"
@@ -103,22 +113,50 @@ observation          """%nBins
     for s in ["GJ"]:
         indices.append(allProc.index(s))
     indices=sorted(indices)
-    card+="%-16s lnN "%"GJ_templateScale"
+    card+="%-16s lnN "%"GJ_systematics"
     for i in range(nBins):
         lastIndex=-1
         for ind in indices:
             card+=fill*(ind-lastIndex-1)
-            card+="%10.2f "%1.00
+            if i == 0:
+               card+="%10.2f "%1.097
+            elif i == 1:
+               card+="%10.2f "%1.0797
+            elif i == 2:
+               card+="%10.2f "%1.0912
+            elif i == 3:
+               card+="%10.2f "%1.335
+            else: print "error too many bins"
             lastIndex=ind
         card+=fill*(len(allProc)-lastIndex-1)
     card+="\n"
-
+    indices=[]
+    for s in ["Vg"]:
+        indices.append(allProc.index(s))
+    indices=sorted(indices)
+    card+="%-16s lnN "%"Vg_systematics"
+    for i in range(nBins):
+        lastIndex=-1
+        for ind in indices:
+            card+=fill*(ind-lastIndex-1)
+            if i == 0:
+               card+="%10.2f "%1.0722
+            elif i == 1:
+               card+="%10.2f "%1.08045
+            elif i == 2:
+               card+="%10.2f "%1.08787
+            elif i == 3:
+               card+="%10.2f "%1.110
+            else: print "error too many bins"
+            lastIndex=ind
+        card+=fill*(len(allProc)-lastIndex-1)
+    card+="\n"
     with open(dataCardPath, "w") as f:
         f.write(card)
     return dataCardPath
 
 def parseCombineToolOutput(datacard):
-    combineOutput=sp.check_output(["combine","-M","Asymptotic","--rMax","3",datacard])
+    combineOutput=sp.check_output(["combine","-M","Asymptotic","--rMax","5","--rMin", "-5",datacard])
     def getLim(line):
         return float(line.split("<")[1])
     # print combineOutput
@@ -132,10 +170,18 @@ def parseCombineToolOutput(datacard):
         if "Expected  2" in line: limit["exp-2"] = getLim(line)
     return limit
 
+def parseCombineToolSignificanceOutput(datacard):
+    combineOutput = sp.check_output(["combine", "-M", "ProfileLikelihood", "--significance", "--uncapped", "1", "--rMin", "-5", datacard], stderr=sp.STDOUT)
+    significance=-5
+    for line in combineOutput.split("\n"):
+        if "Significance: " in line: significance = float(line.split(":")[1])
+    return significance
+
 def getSignalYield(point):
     f=rt.TFile(outdir+signal_scan,"read")
     hist=f.Get("pre_ph165/c_MET300/MT300/STg/"+point)
     hist_gen=f.Get("pre_ph165/c_MET300/MT300/STg/"+point+"_gen")
+    hist_ISR=f.Get("pre_ph165/c_MET300/MT300/STg/"+point+"SRErrISR")  
     if math.isnan(hist.Integral()):
         # input tree for model was bad->Ngen=0->weight=inf
         f.Close()
@@ -143,14 +189,22 @@ def getSignalYield(point):
     sigYield=[]
     statErr=[]
     metErr=[]
+    ISRErr=[]
     for i in range(1,5):
         y=hist.GetBinContent(i)
         yg=hist_gen.GetBinContent(i)
+        yISR=hist_ISR.GetBinContent(i)        
         sigYield.append(.5*(y+yg)) # use mean of reco and gen met yields
-        statErr.append(1+hist.GetBinError(i)/y)
-        metErr.append(1+abs(y-yg)/(y+yg)) # uncertainty: half of the difference
+        if (y > 0):
+           statErr.append(1+hist.GetBinError(i)/y)
+           metErr.append(1+abs(y-yg)/(y+yg)) # uncertainty: half of the difference
+           ISRErr.append(1+(abs(y-yISR)/y)) # uncertainty: full difference
+        else:
+           statErr.append(1+0.1)
+           metErr.append(1+0.1) # uncertainty: half of the difference
+           ISRErr.append(1+0.1) # uncertainty: full difference
     f.Close()
-    return sigYield,statErr,metErr
+    return sigYield,statErr,metErr,ISRErr
 
 def getSignalContamination(point):
     f=rt.TFile(outdir+signal_scan,"read")
@@ -296,6 +350,7 @@ def caclulateLimits(scan):
     count={}
     estat={}
     esyst={}
+    eISR={}
     f=rt.TFile(outdir+"yields.root","read")
     for bkg in backgrounds:
         hist=f.Get("pre_ph165/c_MET300/MT300/STg/"+bkg)
@@ -311,7 +366,7 @@ def caclulateLimits(scan):
     # the same and 100% correlated for all MC
     mcUncertainties={
         "lumi"   : 1+ 2.6 /100,
-        "phSF"   : 1+ 1. /100,
+        "phSF"   : 1+ 2. /100,
         "trigger": 1+ 0.43 /100,
     }
 
@@ -321,7 +376,7 @@ def caclulateLimits(scan):
             p=p.split(".")[0]
             if scan==Scan.T5gg or scan==Scan.T5Wg or scan==Scan.T6Wg or scan==Scan.T6gg:
                 m2,m1=getMasses(p,scan)
-                if m2<1100: continue
+                if m2<1050: continue
             points.append(p)
 
     xsec={}
@@ -361,19 +416,22 @@ def caclulateLimits(scan):
                 xsec_err[int(line.split()[0])]=float(line.split()[2])/100.
 
     gr={}
+    #grSig={}
+    grSig=rt.TGraph2D()
     for lvl in ["obs","obs+1","obs-1","exp","exp+1","exp-1","exp+2","exp-2","obs_xs"]:
         gr[lvl]=rt.TGraph2D()
-    if scan==Scan.T5gg:   h_exp =rt.TH2F("","",18,1200-25,2100+25,21,50,2150)
-    if scan==Scan.T5Wg:   h_exp =rt.TH2F("","",18,1200-25,2100+25,21,50,2150)
-    if scan==Scan.T6gg:   h_exp =rt.TH2F("","",18,1200-25,2100+25,21,50,2150)    
-    if scan==Scan.T6Wg:   h_exp =rt.TH2F("","",18,1200-25,2100+25,21,50,2150)
+    if scan==Scan.T5gg:   h_exp =rt.TH2F("","",35,800-25,2550+25,50,50,2550)
+    if scan==Scan.T5Wg:   h_exp =rt.TH2F("","",35,800-25,2500+25,50,50,2550)
+    if scan==Scan.T6gg:   h_exp =rt.TH2F("","",23,1000-25,2100+25,41,50,2100)    
+    if scan==Scan.T6Wg:   h_exp =rt.TH2F("","",23,1000-25,2100+25,41,50,2100)
     if scan==Scan.GGM:    h_exp =rt.TH2F("","", 33, 205-12.5, 1005+12.5, 33, 215-12.5, 1015+12.5) # 32 points in each direction
     if scan==Scan.TChiWg: h_exp =rt.TH2F("","",41,300-12.5,1300+12.5,1,-1,1)
     if scan==Scan.TChiNg: h_exp =rt.TH2F("","",41,300-12.5,1300+12.5,1,-1,1)   
     h_exp_xs=rt.TH2F(h_exp)
     h_obs   =rt.TH2F(h_exp)
     h_obs_xs=rt.TH2F(h_exp)
-    print points
+    h_Sig=rt.TH2F(h_exp)
+    print points            
     for i,point in enumerate(points):
         print point,
         m2,m1=getMasses(point,scan)
@@ -385,7 +443,7 @@ def caclulateLimits(scan):
         if not sigYield:
             print " broken!"
             continue # broken point
-        c,st,sy=dict(count),dict(estat),dict(esyst)
+        c,st,sy,sISR=dict(count),dict(estat),dict(esyst),dict(eISR)
         # decompose partially correlated parts:
         cor,unc=decomposeCorrelations(esyst,count)
         del sy["GJ"]
@@ -395,6 +453,7 @@ def caclulateLimits(scan):
         c['sig']=sigYield[0]
         st['sig']=sigYield[1]
         sy['sig']=sigYield[2]
+        sISR['sig']=sigYield[3]
         # subtract bkg overestimation from signal contamination
         subtractGJ=[x*contamin for x in c["GJ"]]
         subtractVG=[x*contamin for x in c["Vg"]]
@@ -403,8 +462,10 @@ def caclulateLimits(scan):
         c["sig"]=map(sub,c["sig"],subtract)
         # avoid negative counts
         c["sig"]=[max(0,x) for x in c["sig"]]
-        datacard=prepareDatacard(obs,c,st,sy,cor,mcUncertainties,point)
+        datacard=prepareDatacard(obs,c,st,sy,sISR,cor,mcUncertainties,point)
+      #  continue
         rLimits=parseCombineToolOutput(datacard)
+        Significance=parseCombineToolSignificanceOutput(datacard)
         e_xs_rel=xsec_err[key]
         rLimits["obs+1"]=rLimits["obs"]*(1+e_xs_rel)
         rLimits["obs-1"]=rLimits["obs"]*(1-e_xs_rel)
@@ -413,6 +474,11 @@ def caclulateLimits(scan):
         for lvl in ["obs","obs+1","obs-1","exp","exp+1","exp-1","exp+2","exp-2"]:
             rLim=rLimits[lvl]
             gr[lvl].SetPoint(i,x,y,rLim)
+        if scan==Scan.T5gg: h_Sig.SetBinContent(h_Sig.FindBin(x,y),Significance)
+        if scan==Scan.T5Wg: h_Sig.SetBinContent(h_Sig.FindBin(x,y),Significance)
+        if scan==Scan.T6gg: h_Sig.SetBinContent(h_Sig.FindBin(x,y),Significance)
+        if scan==Scan.T6Wg: h_Sig.SetBinContent(h_Sig.FindBin(x,y),Significance)
+        grSig.SetPoint(i,x,y,Significance)
         rLim=rLimits['exp']
         h_exp.SetBinContent(h_exp.FindBin(x,y),rLim)
         h_exp_xs.SetBinContent(h_exp.FindBin(x,y),rLim*xs)
@@ -426,6 +492,12 @@ def caclulateLimits(scan):
     f=rt.TFile(outdir+"limits_%s.root"%sScan,"update")
     for lvl in ["obs","obs+1","obs-1","exp","exp+1","exp-1","exp+2","exp-2","obs_xs"]:
         gr[lvl].Write("gr_"+lvl,rt.TObject.kOverwrite)
+
+    grSig.Write("gr_"+"significance",rt.TObject.kOverwrite)
+    if scan==Scan.T5gg: h_Sig.Write("h_"+"significance",rt.TObject.kOverwrite)
+    if scan==Scan.T5Wg: h_Sig.Write("h_"+"significance",rt.TObject.kOverwrite)
+    if scan==Scan.T6gg: h_Sig.Write("h_"+"significance",rt.TObject.kOverwrite)
+    if scan==Scan.T6Wg: h_Sig.Write("h_"+"significance",rt.TObject.kOverwrite)
 
     h_exp.Write("h_exp",rt.TObject.kOverwrite)
     h_exp_xs.Write("h_exp_xs",rt.TObject.kOverwrite)
@@ -483,14 +555,19 @@ def smoothContours(scan):
     f.Close()
 
 if __name__ == '__main__':
-    basedir="../"
+    basedir="/user/jschulz/2016/photonmet/"
     outdir=basedir+"output/"
     signal_scan="signal_scan_v19.root"
     rho=-0.0
-    caclulateLimits(Scan.T5gg)
-    getContours(Scan.T5gg)
-    redoHistogram(Scan.T5gg)
-    smoothContours(Scan.T5gg)
+    
+#    caclulateLimits(Scan.TChiWg)
+    
+#    caclulateLimits(Scan.TChiNg)
+    
+ #   caclulateLimits(Scan.T5gg)
+ #   getContours(Scan.T5gg)
+ #   redoHistogram(Scan.T5gg)
+ #   smoothContours(Scan.T5gg)
 
     caclulateLimits(Scan.T5Wg)
     getContours(Scan.T5Wg)
@@ -511,7 +588,5 @@ if __name__ == '__main__':
 #    getContours(Scan.GGM)
 #    smoothContours(Scan.GGM)
 
-    caclulateLimits(Scan.TChiWg)
-    
-    caclulateLimits(Scan.TChiNg)
+
 

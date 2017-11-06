@@ -5,6 +5,7 @@ set(MODULES
   SR_JES
   JES_shift
   fit_JES
+  JES_studies
   tests
   distributions
   trigger
@@ -28,8 +29,8 @@ set(MODULES
   wz_ratio
   80XXcheck
   plot_limit
+  plot_uncert
   cutflow
-  danilo_datacards
   )
 
 foreach(MODULE ${MODULES})

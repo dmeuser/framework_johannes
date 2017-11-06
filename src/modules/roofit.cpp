@@ -769,10 +769,10 @@ void resultSummary(FitResult referenceResult,SummaryMode_t summaryMode,FitMode_t
    bool isSim=(fitMode!=DATA);
 
    float coord1=-1.;
-   float coord2=2.0;
+   float coord2=2.2;
    float coordRange=coord2-coord1;
    float axRange1=0.39999;
-   float axRange2=2.1001;
+   float axRange2=2.2001;
 
    int iResults=g_fitResults.size();
    int iResult=0;
@@ -808,8 +808,8 @@ void resultSummary(FitResult referenceResult,SummaryMode_t summaryMode,FitMode_t
       reference2=referenceResult.r2;
 
       //include scale uncertainty
-      float errorVg = TMath::Sqrt(referenceResult.e1*referenceResult.e1 + 0.06*0.06);
-      float errorgJets = TMath::Sqrt(referenceResult.e2*referenceResult.e2 + 0.34*0.34);     
+      float errorVg = TMath::Sqrt(referenceResult.e1*referenceResult.e1 + 0.0722*0.0722);
+      float errorgJets = TMath::Sqrt(referenceResult.e2*referenceResult.e2 + 0.097*0.097);     
 
       box.SetFillColor(fillcolor1);
   //    box.DrawBox(referenceResult.r1-referenceResult.e1,0,referenceResult.r1+referenceResult.e1,1);
@@ -1021,11 +1021,11 @@ void run (FitMode_t fitMode){
    
    FitResult referenceResult=fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.8,3.2},{.2,.4},fitCombinations,fixedBkg,fitMode);
 
- /*  fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.8,3.2},{.1,.2},fitCombinations,fixedBkg,fitMode);
+   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.8,3.2},{.1,.2},fitCombinations,fixedBkg,fitMode);
    fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.8,3.2},{.4,.8},fitCombinations,fixedBkg,fitMode);
    fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.4,1.2,2.8,3.2},{.1,.4,.8,.4},fitCombinations,fixedBkg,fitMode);
    fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.4,1.2,2.8,3.2},{.2,.8,1.6,.4},fitCombinations,fixedBkg,fitMode);
-   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.4,1.2,2.8,3.2},{.1,.8,1.6,.4},fitCombinations,fixedBkg,fitMode);*/
+   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.4,1.2,2.8,3.2},{.1,.8,1.6,.4},fitCombinations,fixedBkg,fitMode);
    /*
    fit("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","absphiMETjet",{0,.4,3.2,3.4},{.1,.2,.1},fitCombinations,fixedBkg,fitMode);
    fit("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","absphiMETjet",{0,.4,3.2,3.4},{.1,.4,.1},fitCombinations,fixedBkg,fitMode);
@@ -1049,46 +1049,48 @@ void run (FitMode_t fitMode){
  //  fit("pre_ph165/c_S30/MT100/Sl80vMTl300/0bM/","absphiMETjet",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
 
    //2016 studies
-   
+  
    referenceResult=fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.8,3.2},{.2,.4},fitCombinations,fixedBkg,fitMode);
 //   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh_phoPtl500",{0,.8,3.2},{.2,.4},fitCombinations,fixedBkg,fitMode);
 //   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh_phoPtl700",{0,.8,3.2},{.2,.4},fitCombinations,fixedBkg,fitMode);
 //   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh_phoPtg700",{0,.8,3.2},{.2,.4},fitCombinations,fixedBkg,fitMode);
    
  //  fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETph",{0,1,2,2.4,3.2,3.4},{1,.5,.4,.2,.1},fitCombinations,fixedBkg,fitMode);
-
- 
-   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETjet",{0,1.2,2.8,3.2,3.4},{.2,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
+   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
+//   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
+   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);   
+   fit("pre_ph165/c_MET100/MT100/METl400vMTl400/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
    fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh_JESu",{0,.8,3.2},{.2,.4},fitCombinations,fixedBkg,fitMode);
    fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh_JESd",{0,.8,3.2},{.2,.4},fitCombinations,fixedBkg,fitMode);
-   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","MET",{100,310,410},{30,100},fitCombinations,fixedBkg,fitMode);
- //  fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","METSHT",{0,20,50},{2,5},fitCombinations,fixedBkg,fitMode);
-   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","MT"    ,{100,300,500,600},{40,20,100},fitCombinations,fixedBkg,fitMode);
+   fit("pre_ph165/c_MET150/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
+   fit("pre_ph165/c_MET150/MT150/METl400vMTl400/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
 //   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","STg"    ,{300,500,700,800},{20,40,100},fitCombinations,fixedBkg,fitMode);     
-   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","relPt2Jets",{0.08,1},{0.08},fitCombinations,fixedBkg,fitMode);
-   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","DeltaS",{0.2,2.4,3.2},{0.2,0.1},fitCombinations,fixedBkg,fitMode);
+//   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","relPt2Jets",{0.08,1},{0.08},fitCombinations,fixedBkg,fitMode);
+//   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","DeltaS",{0.2,2.4,3.2},{0.2,0.1},fitCombinations,fixedBkg,fitMode);
  //  fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","DeltaS1",{0,2.4,3.2},{0.2,0.1},fitCombinations,fixedBkg,fitMode);
-   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/","absphiMETjet",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
 
+ 
+ 
+   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETjet",{0,1.2,2.8,3.2,3.4},{.2,.4,.2,.1},fitCombinations,fixedBkg,fitMode);
+     fit("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/","absphiMETjet",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
    fit("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/","absphiMETjet",{0,1.2,2.8,3.2,3.4},{.2,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
- //  fit("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/","absphiMETjet",{0,1.2,2.8,3.2,3.4},{.2,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
+//   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/","absphiMETjet",{0,1.2,2.8,3.2,3.4},{.2,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
    fit("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","absphiMETjet",{0,1.2,2.8,3.2,3.4},{.2,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
  //  fit("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
-   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
- //  fit("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
-   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);   
+
    
    fit("pre_ph165/c_MET150/MT100/METl300vMTl300/","absphiMETjet",{0,1.2,2.8,3.2,3.4},{.2,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
-   fit("pre_ph165/c_MET150/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
+
  //  fit("pre_ph165/c_MET150/MT100/METl300vMTl300/","absphiMETph",{0,1,2,2.4,3.2,3.4},{1,.5,.4,.2,.1},fitCombinations,fixedBkg,fitMode);
     
    fit("pre_ph165/c_MET150/MT150/METl400vMTl400/","absphiMETjet",{0,1.2,2.8,3.2,3.4},{.2,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
-   fit("pre_ph165/c_MET150/MT150/METl400vMTl400/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
+
  //  fit("pre_ph165/c_MET150/MT150/METl400vMTl400/","absphiMETph",{0,1,2,2.4,3.2,3.4},{1,.5,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
    fit("pre_ph165/c_MET100/MT100/METl400vMTl400/","absphiMETjet",{0,1.2,2.8,3.2,3.4},{.2,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
-   fit("pre_ph165/c_MET100/MT100/METl400vMTl400/","absphiMETnJetPh",{0,.4,3.2,3.4},{.2,.4,.1},fitCombinations,fixedBkg,fitMode);
  //  fit("pre_ph165/c_MET100/MT100/METl400vMTl400/","absphiMETph",{0,1,2,2.4,3.2,3.4},{1,.5,.4,.2,.1},fitCombinations,fixedBkg,fitMode);
-
+ //  fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","MET",{100,310,410},{30,100},fitCombinations,fixedBkg,fitMode);
+   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","METSHT",{0,20,50},{2,5},fitCombinations,fixedBkg,fitMode);
+   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","MT"    ,{100,300,500,600},{40,20,100},fitCombinations,fixedBkg,fitMode);
 
  
 

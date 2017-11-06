@@ -118,6 +118,7 @@ void runScan_80X(Scan_t scan)
    std::map<std::string,TH1F> hSR;
    std::map<std::string,TH1F> hCR;
    std::map<std::string,TH1F> hPresel;
+   std::map<std::string,TH1F> hISRWeight;
 
    TFile file(fname,"read");
    if (file.IsZombie()) {
@@ -135,6 +136,7 @@ void runScan_80X(Scan_t scan)
    UShort_t signal_m1 = 0;
    UShort_t signal_m2 = 0;
    UShort_t signal_nBinos = 0;
+   Int_t nGoodVertices = 0; 
    tree::MET *MET=0;
    tree::MET *genMET=0;
 
@@ -152,9 +154,10 @@ void runScan_80X(Scan_t scan)
  //  tree->SetBranchAddress("signal_nBinos", &signal_nBinos);  
    tree->SetBranchAddress("met", &MET);
    tree->SetBranchAddress("met_gen", &genMET);
+   tree->SetBranchAddress("nGoodVertices", &nGoodVertices);
 
    std::string model= "";
-   std::map<std::string,int> miAcc;
+   std::map<std::string,int> miAcc,PVlowAll,PVhighAll,PVlowSR,PVhighSR;
    int iFastSimVeto=0;
    int iBeforeVeto=0;
 
@@ -182,7 +185,9 @@ void runScan_80X(Scan_t scan)
       }
       */
       if (hSR.count(model)<1) {
+         
          hSR[model]=hist::fromWidths((model+"SR").c_str(),";STg;EventsBIN",{600,800,1000,1300,1600},{200,200,300,300});
+         hSR[model+"SRErrISR"]=hist::fromWidths((model+"SRErrISR").c_str(),";STg;EventsBIN",{600,800,1000,1300,1600},{200,200,300,300});         
          hSR[model+"_gen"]=hist::fromWidths((model+"genSR").c_str(),";gen STg;EventsBIN",{600,800,1000,1300,1600},{200,200,300,300});
          hCR[model]=hist::fromWidths((model+"CR").c_str(),";absphiMETnJetPh;EventsBIN",{0,.8,3.2},{.2,.4});
 
@@ -191,11 +196,68 @@ void runScan_80X(Scan_t scan)
          hPresel[model+"_mu05"]=hist::fromWidths((model+"_mu05").c_str(),";absphiMETnJetPh;EventsBIN",{0,.8,3.2},{.2,.4});
          hSR[model+"_mu2"]=hist::fromWidths((model+"SR"+"_mu2").c_str(),";STg;EventsBIN",{600,800,1000,1300,1600},{200,200,300,300});
          hSR[model+"_mu05"]=hist::fromWidths((model+"SR"+"_mu05").c_str(),";STg;EventsBIN",{600,800,1000,1300,1600},{200,200,300,300});
-         miAcc[model]=0;
+         hISRWeight[model+"_before"]=hist::fromWidths((model+"_before").c_str(),";phoPt;EventsBIN",{0.,700.},{50.});
+         hISRWeight[model+"_after"]=hist::fromWidths((model+"_after").c_str(),";phoPt;EventsBIN",{0.,700.},{50.});
+         hISRWeight[model+"_afterErr"]=hist::fromWidths((model+"_afterErr").c_str(),";phoPt;EventsBIN",{0.,700.},{50.});
+         
 
+         miAcc[model]=0;
+         PVlowAll[model]=0;
+         PVhighAll[model]=0;
+         PVlowSR[model]=0;              
+         PVhighSR[model]=0;
+      }
+      
+      float fEventWeight=w_pu * w_mc;
+      float fEventWeightError = fEventWeight;
+
+      //ISR weighting
+      TVector3 EWKinoPair;
+      double EWKinoPairPt = 0;
+      if (scan == TChiWg || scan == TChiNg){
+         for (tree::GenParticle &genP: *genParticles){
+            if (fabs(genP.pdgId) > 1000022){
+            EWKinoPair += genP.p;
+            }
+         }
+         EWKinoPairPt = EWKinoPair.Pt();
+         hISRWeight[model+"_before"].Fill(EWKinoPairPt,fEventWeight);
+         if (EWKinoPairPt < 50) {
+            fEventWeight*=1;
+         }
+         else if (EWKinoPairPt < 100) {
+            fEventWeight*=1.052;
+         }
+         else if (EWKinoPairPt < 150) {
+            fEventWeight*=1.179;
+         }
+         else if (EWKinoPairPt < 200) {
+            fEventWeight*=1.150;
+         }
+         else if (EWKinoPairPt < 300) {
+            fEventWeight*=1.057;
+         }
+         else if (EWKinoPairPt < 400) {
+            fEventWeight*=1.;
+         }
+         else if (EWKinoPairPt < 600) {
+            fEventWeight*=0.912;
+         }
+         else{
+            fEventWeight*=0.783;
+         }                 
+      }
+      else{
+         hISRWeight[model+"_before"].Fill(EWKinoPairPt,fEventWeight);
       }
 
-      float fEventWeight=w_pu * w_mc;
+      if (nGoodVertices < 17){
+         PVlowAll[model]++;
+      }
+      else {
+         PVhighAll[model]++;
+      }
+      
 
       std::vector<tree::Photon const *> lPho,mPho,tPho,lPixPho;
       for (tree::Photon const &ph: *photons){
@@ -211,11 +273,19 @@ void runScan_80X(Scan_t scan)
          }
       }
 
-      if (lPho.empty()) continue;
+      if (lPho.empty()) {
+         hISRWeight[model+"_after"].Fill(-1,fEventWeight);
+         hISRWeight[model+"_afterErr"].Fill(-1,fEventWeightError);
+         continue;
+      }
 
       std::vector<tree::Photon const*> const &pho = lPho;
       float const phoPt=pho[0]->p.Pt(); // set *before* wCalc->get() !
-      if (phoPt<180) continue;
+      if (phoPt<180) {
+         hISRWeight[model+"_after"].Fill(-1,fEventWeight);
+         hISRWeight[model+"_afterErr"].Fill(-1,fEventWeightError);
+         continue;
+      }  //photon pT cut
       float const MT=phys::M_T(*pho[0],*MET);
       float STg=MET->p.Pt();
       float genSTg=genMET->p.Pt();
@@ -223,6 +293,7 @@ void runScan_80X(Scan_t scan)
          STg+=ph->p.Pt();
          genSTg+=ph->p.Pt();
       }
+
 
       // jet related
       std::vector<tree::Jet> cjets=phys::getCleanedJets(*jets);
@@ -246,6 +317,8 @@ void runScan_80X(Scan_t scan)
       iBeforeVeto++;
       if (vetoEvent) {
          iFastSimVeto++;
+         hISRWeight[model+"_after"].Fill(-1,fEventWeight);
+         hISRWeight[model+"_afterErr"].Fill(-1,fEventWeightError);
          continue;
       }
 
@@ -256,8 +329,11 @@ void runScan_80X(Scan_t scan)
          if (std::fabs(MET->p.DeltaPhi(jet.p)) < 0.3) clean_MET = false;
       }
 
-      if (!clean_MET) continue;
-      
+      if (!clean_MET) {
+         hISRWeight[model+"_after"].Fill(-1,fEventWeight);
+         hISRWeight[model+"_afterErr"].Fill(-1,fEventWeightError);
+         continue;
+      }
 
       float minDR=std::numeric_limits<float>::max();
       for (tree::Jet const &jet: *jets){
@@ -268,7 +344,11 @@ void runScan_80X(Scan_t scan)
             minDR=std::min(minDR,dr);
          }
       }
-      if (minDR < .5) continue;
+      if (minDR < .5){
+         hISRWeight[model+"_after"].Fill(-1,fEventWeight);
+         hISRWeight[model+"_afterErr"].Fill(-1,fEventWeightError);
+         continue;
+      }
 
       float dPhiMETnearJet=4;
       float iJet=0;
@@ -286,30 +366,52 @@ void runScan_80X(Scan_t scan)
          if (std::abs(dPhi) < std::abs(dPhiMETnearJetPh))
             dPhiMETnearJetPh=dPhi;
       }
-
+      
       hPresel[model].Fill(dPhiMETnearJetPh,fEventWeight);
       hPresel[model+"_mu2"].Fill(dPhiMETnearJetPh,fEventWeight*w_pdf->at(4));
       hPresel[model+"_mu05"].Fill(dPhiMETnearJetPh,fEventWeight*w_pdf->at(8));
-
+      
       if (MET->p.Pt()>100 && MT>100) {
          if (MET->p.Pt()<300 || MT<300) {
             hCR[model].Fill(dPhiMETnearJetPh,fEventWeight);
          }
       }
       //adjust genMET study for MET uncertainty -> selection with gen met
-      if (MET->p.Pt()>300) {
-         if (MT>300) {
-            hSR[model].Fill(STg,fEventWeight);
-            hSR[model+"_gen"].Fill(genSTg,fEventWeight);
-            hSR[model+"_mu2"].Fill(STg,fEventWeight*w_pdf->at(4));
-            hSR[model+"_mu05"].Fill(STg,fEventWeight*w_pdf->at(8));
-            if (STg>600) miAcc[model]++;
+      if (MET->p.Pt()>300 && MT>300 && STg>600) {
+         miAcc[model]++;
+         if (nGoodVertices < 17){
+            PVlowSR[model]++;
          }
+         else {
+            PVhighSR[model]++;
+         }
+
+         hISRWeight[model+"_after"].Fill(EWKinoPairPt,fEventWeight);
+         hISRWeight[model+"_afterErr"].Fill(EWKinoPairPt,fEventWeightError);
+         hSR[model].Fill(STg,fEventWeight);
+         hSR[model+"SRErrISR"].Fill(STg,fEventWeightError);
+         hSR[model+"_gen"].Fill(genSTg,fEventWeight);
+         hSR[model+"_mu2"].Fill(STg,fEventWeight*w_pdf->at(4));
+         hSR[model+"_mu05"].Fill(STg,fEventWeight*w_pdf->at(8));
+
       }
+      else {
+      hISRWeight[model+"_after"].Fill(-1,fEventWeight);
+      hISRWeight[model+"_afterErr"].Fill(-1,fEventWeightError);
+      }
+      
    } // evt loop
    io::log<<"";
    io::log*"vetoed "*iFastSimVeto*"/"*iBeforeVeto>>"events";
 
+   io::log<<"";
+  // io::log*"rel. acceptance low PV set "*PVlowSR*"/"*PVlowAll>>"";  
+   io::log<<"";
+ //  io::log*"rel. acceptance high PV set "*PVhighSR*"/"*PVhighAll>>"";
+
+   for (auto &it: PVlowSR) std::cout << it.first << " : " << ((1.*it.second/PVlowAll[it.first]) - (1.*PVhighSR[it.first]/PVhighAll[it.first]))*100/2. << std::endl; //balanced deviation because of PU in percent
+
+    
    io::RootFileReader dataReader(TString::Format("histograms_%s.root",cfg.treeVersion.Data()),TString::Format("distributions%.1f",cfg.processFraction*100));
    TH1F hData(*dataReader.read<TH1F>("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/SinglePhoton"));
    float const nData=hData.Integral();
@@ -328,10 +430,12 @@ void runScan_80X(Scan_t scan)
 
    io::RootFileSaver saver_hist(TString::Format("signal_scan_%s.root",cfg.treeVersion.Data()),"",false);
    TString sVar;
+   
    for (auto const &map: hSR) {
       std::string const model=map.first;
       if (model.find("_mu")!=std::string::npos) continue; // variations are handeled in nominal iteration
       if (model.find("_gen")!=std::string::npos) continue; // gen case handeled in nominal iteration
+      if (model.find("SRErrISR")!=std::string::npos) continue; // gen case handeled in nominal iteration     
       // scale lumi
       TH1F* hcf;
       if (model.find("T5gg")!=std::string::npos) {
@@ -343,53 +447,72 @@ void runScan_80X(Scan_t scan)
       } else {
          hcf=(TH1F*)file.Get(("TreeWriter/hCutFlow"+model).c_str());
          if (scan==T5Wg) sScan="T5Wg";
-       //  std::cout << model << ".root" << std::endl;
+     //    std::cout << model << ".root" << std::endl;
       }
       assert(hcf);
       float Ngen=hcf->GetBinContent(2);
       if (scan==T5Wg) {
          // consider that gg, gW, and WW events were generated
-       //  if (sScan=="T5gg") Ngen/=4.0;
          Ngen/=2.0;
       }
       else if (scan==T5gg) {
-         // consider that gg, gW, and WW events were generated
-       //  if (sScan=="T5gg") Ngen/=4.0;
          Ngen/=4.0;
       }
       else if (scan==T6Wg) {
-         // consider that gg, gW, and WW events were generated
-       //  if (sScan=="T5gg") Ngen/=4.0;
          Ngen/=2.0;
       }
       else if (scan==T6gg) {
-         // consider that gg, gW, and WW events were generated
-       //  if (sScan=="T5gg") Ngen/=4.0;
          Ngen/=4.0;
       }
 
-      double scaleUnc,normalization;
+      double scaleUnc,normalization, ISR_norm;
+
+  //    debug << model << hISRWeight[model+"_before"].Integral(0,-1) << hISRWeight[model+"_after"].Integral(0,-1) << hISRWeight[model+"_before"].Integral(0,-1)/hISRWeight[model+"_after"].Integral(0,-1) ;
+      ISR_norm = hISRWeight[model+"_before"].Integral(0,-1)/hISRWeight[model+"_after"].Integral(0,-1);
+      
       normalization=hPresel[model].Integral()/hPresel[model+"_mu2"].Integral();
       scaleUnc=std::fabs(1-normalization*hSR[model+"_mu2"].Integral()/hSR[model].Integral());
       normalization=hPresel[model].Integral()/hPresel[model+"_mu05"].Integral();
       scaleUnc=std::max(scaleUnc,std::fabs(1-normalization*hSR[model+"_mu05"].Integral()/hSR[model].Integral()));
 
+      hSR[model].Scale(ISR_norm); //scale after scaleUnc determination because otherwise Eventweights don't cancel
+      hSR[model+"SRErrISR"].Scale(ISR_norm);   
+      hSR[model+"_gen"].Scale(ISR_norm);
+      hCR[model].Scale(ISR_norm);  
+
       std::pair<int,int> const masses=getMasses(model,scan);
       int const m=masses.first;
       float const xs=mXsecs[m];
       float const w=xs/Ngen*cfg.lumi;
+         
       hSR[model].Scale(w);
+      hSR[model+"SRErrISR"].Scale(w);      
       hSR[model+"_gen"].Scale(w);
       hCR[model].Scale(w);
+
       hist::mergeOverflow(hSR[model]);
+      hist::mergeOverflow(hSR[model+"SRErrISR"]);  
       hist::mergeOverflow(hSR[model+"_gen"]);
       hist::mergeOverflow(hCR[model]);
+      hist::mergeOverflow(hISRWeight[model+"_before"]);
+      hist::mergeOverflow(hISRWeight[model+"_after"]);
+      hist::mergeOverflow(hISRWeight[model+"_afterErr"]);
+      
       hSR[model].Scale(cfg.trigger_eff_Ph);
+      hSR[model+"SRErrISR"].Scale(cfg.trigger_eff_Ph);   
       hSR[model+"_gen"].Scale(cfg.trigger_eff_Ph);
       hCR[model].Scale(cfg.trigger_eff_Ph);
+      
       sVar = "pre_ph165/c_MET300/MT300/STg";
       saver_hist.save(hSR[model],sVar+"/"+model);
+      saver_hist.save(hSR[model+"SRErrISR"],sVar+"/"+model+"SRErrISR");  
       saver_hist.save(hSR[model+"_gen"],sVar+"/"+model+"_gen");
+      
+      sVar = "EWKinoPairPt";      
+      saver_hist.save(hISRWeight[model+"_before"],sVar+"/"+model+"_before");
+      sVar = "pre_ph165/c_MET300/MT300/STg600/EWKinoPairPt";  
+      saver_hist.save(hISRWeight[model+"_after"],sVar+"/"+model+"_after");
+      saver_hist.save(hISRWeight[model+"_afterErr"],sVar+"/"+model+"_afterErr");
 
       // acceptance
       float const x=masses.first;
@@ -418,10 +541,10 @@ void runScan_80X(Scan_t scan)
 extern "C"
 void run()
 {
-	//runScan_80X(TChiWg);
-	//runScan_80X(TChiNg);
-	runScan_80X(T5Wg);
-	//runScan_80X(T5gg);
-	//runScan_80X(T6Wg);
-	//runScan_80X(T6gg);  
+ //   runScan_80X(TChiWg);
+    runScan_80X(TChiNg);
+ //   runScan_80X(T5Wg);
+    runScan_80X(T5gg);
+    runScan_80X(T6Wg);
+    runScan_80X(T6gg);  
 }

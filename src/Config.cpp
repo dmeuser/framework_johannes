@@ -46,7 +46,7 @@ Config::Config()
    efake.label=pt.get<std::string>("efake.label");
    efake.color=gROOT->ProcessLine((pt.get<std::string>("efake.color")+";").c_str());
 
-   lumiText=TString::Format("%.2f fb^{-1}",lumi*1e-3);
+   lumiText=TString::Format("%.1f fb^{-1}",lumi*1e-3);
    sqrtsText=pt.get<std::string>("general.sqrtsText");
    extraText=pt.get<std::string>("general.extraText");
 

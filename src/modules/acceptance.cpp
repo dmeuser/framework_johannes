@@ -3,6 +3,7 @@
 #include "tools/io.hpp"
 #include "tools/util.hpp"
 
+#include <TStyle.h>
 #include <TGraph2D.h>
 #include <TGraphSmooth.h>
 
@@ -12,8 +13,11 @@ enum Scan_t
 {
    T5gg,
    T5Wg,
-   GGM,
-   TChiWg
+   TChiWg,
+   T6gg,
+   T6Wg,
+   TChiNg,
+   GGM
 };
 
 void transpose(TGraph &gr)
@@ -109,8 +113,10 @@ void drawLabels(Scan_t scan,TString text)
    TString sScan;
    if (scan==T5gg) sScan="T5gg";
    if (scan==T5Wg) sScan="T5Wg";
-   if (scan==GGM)  sScan="GGM";
    if (scan==TChiWg) sScan="TChiWg";
+   if (scan==T6gg) sScan="T6gg";
+   if (scan==T6Wg) sScan="T6Wg";
+   if (scan==TChiNg) sScan="TChiNg";
 
    TLatex label= scan==GGM ? gfx::cornerLabel(text,4) : gfx::cornerLabel(text,1);
    if (scan==GGM) label.SetY(label.GetY()+.05);
@@ -125,21 +131,24 @@ void run(Scan_t scan)
    TString sScan;
    if (scan==T5gg) sScan="T5gg";
    if (scan==T5Wg) sScan="T5Wg";
-   if (scan==GGM)  sScan="GGM";
    if (scan==TChiWg) sScan="TChiWg";
+   if (scan==T6gg) sScan="T6gg";
+   if (scan==T6Wg) sScan="T6Wg";
+   if (scan==TChiNg) sScan="TChiNg";
    TString title;
    if (scan==T5gg) title=";m#kern[0.1]{_{#lower[-0.12]{#tilde{g}}}} [GeV];m#kern[0.1]{_{#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}}} [GeV];";
    if (scan==T5Wg) title=";m#kern[0.1]{_{#lower[-0.12]{#tilde{g}}}} [GeV];m#kern[0.1]{_{#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0/#pm}}}#kern[-1.3]{#scale[0.85]{_{1}}}}} [GeV];";
-   if (scan==GGM)  title=";m_{#tilde{B}} [GeV];m_{#tilde{W}} [GeV];";
    if (scan==TChiWg) title=";m_{NLSP} [GeV];";
-
+   if (scan==T6gg) title=";m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} [GeV];m#kern[0.1]{_{#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}}} [GeV];";
+   if (scan==T6Wg) title=";m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} [GeV];m#kern[0.1]{_{#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0/#pm}}}#kern[-1.3]{#scale[0.85]{_{1}}}}} [GeV];";
+   if (scan==TChiNg) title=";m_{NLSP} [GeV];";
    io::RootFileReader fileReader(TString::Format("signal_scan_%s.root",cfg.treeVersion.Data()),"pre_ph165");
 
    io::RootFileSaver saver("plots.root","");
    TCanvas can;
 
-   if (scan==TChiWg) {
-      TGraph2D grAcc(*fileReader.read<TGraph2D>("c_S80/MT300/STg/"+sScan+"_acceptance"));
+   if (scan==TChiWg || scan == TChiNg) {
+      TGraph2D grAcc(*fileReader.read<TGraph2D>("c_MET300/MT300/STg/"+sScan+"_acceptance"));
       TGraph grA(grAcc.GetN());
       grA.SetTitle(title+"Acceptance");
       double *x=grAcc.GetX();
@@ -152,7 +161,7 @@ void run(Scan_t scan)
       drawLabels(scan,"Acceptance");
       saver.save(can,"acceptance/"+sScan);
 
-      TGraph2D grScaleUnc(*fileReader.read<TGraph2D>("c_S80/MT300/STg/"+sScan+"_scaleUnc"));
+      TGraph2D grScaleUnc(*fileReader.read<TGraph2D>("c_MET300/MT300/STg/"+sScan+"_scaleUnc"));
       TGraph grSU(grScaleUnc.GetN());
       grSU.SetTitle(title+"Scale uncertainty");
       x=grScaleUnc.GetX();
@@ -167,7 +176,7 @@ void run(Scan_t scan)
       drawLabels(scan,"Scale uncertainty on acceptance");
       saver.save(can,"scaleUnc/"+sScan);
 
-      TGraph2D grCont(*fileReader.read<TGraph2D>("c_S30/MT100/Sl80vMTl300/absphiMETjet/"+sScan+"_contamination"));
+      TGraph2D grCont(*fileReader.read<TGraph2D>("c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/"+sScan+"_contamination"));
       TGraph grC(grCont.GetN());
       grC.SetTitle(title+"Signal fraction");
       x=grCont.GetX();
@@ -181,7 +190,7 @@ void run(Scan_t scan)
       saver.save(can,"contamination/"+sScan);
    } else {
       // Acceptance
-      TGraph2D grAcc(*fileReader.read<TGraph2D>("c_S80/MT300/STg/"+sScan+"_acceptance"));
+      TGraph2D grAcc(*fileReader.read<TGraph2D>("c_MET300/MT300/STg/"+sScan+"_acceptance"));
       grAcc.SetTitle(title+"Acceptance");
       TH2D hAcc(*grAcc.GetHistogram());
 
@@ -207,7 +216,7 @@ void run(Scan_t scan)
       saver.save(can,"acceptance/"+sScan+"_colz");
 
       if (scan!=GGM) {
-         TGraph2D grScaleUnc(*fileReader.read<TGraph2D>("c_S80/MT300/STg/"+sScan+"_scaleUnc"));
+         TGraph2D grScaleUnc(*fileReader.read<TGraph2D>("c_MET300/MT300/STg/"+sScan+"_scaleUnc"));
          grScaleUnc.SetTitle(title);
          TH2D hScaleUnc(*grScaleUnc.GetHistogram());
          hScaleUnc.Draw("colz");
@@ -217,7 +226,7 @@ void run(Scan_t scan)
       }
 
       // Signal Contamination
-      TGraph2D grCont(*fileReader.read<TGraph2D>("c_S30/MT100/Sl80vMTl300/absphiMETjet/"+sScan+"_contamination"));
+      TGraph2D grCont(*fileReader.read<TGraph2D>("c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/"+sScan+"_contamination"));
       grCont.SetTitle(title+"Signal fraction");
       TH2D hCont(*grCont.GetHistogram());
 
@@ -232,8 +241,10 @@ void run(Scan_t scan)
 extern "C"
 void run()
 {
-   run(T5gg);
-   run(T5Wg);
-   run(GGM);
+//   run(T5gg);
+ //  run(T5Wg);
    run(TChiWg);
+ //  run(T6gg);
+   run(T6Wg);
+//   run(TChiNg);
 }

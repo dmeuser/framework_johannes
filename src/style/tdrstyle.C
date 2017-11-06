@@ -67,7 +67,7 @@ void setTDRStyle() {
   tdrStyle->SetFuncWidth(1);
 
 //For the date:
-  tdrStyle->SetOptDate(0);
+ // tdrStyle->SetOptDate(0);
   // tdrStyle->SetDateX(Float_t x = 0.01);
   // tdrStyle->SetDateY(Float_t y = 0.01);
 

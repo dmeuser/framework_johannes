@@ -97,7 +97,7 @@ void plot_1d(Scan_t scan)
    io::RootFileSaver aux_saver(TString::Format("aux_limits_%s.root",sScan.Data()),"");
    std::map<TString,TGraph> gr;
    for (TString lvl: {"exp","exp+1","exp-1","exp+2","exp-2","obs"}) {
-      TGraph2D gr2(*fileReader.read<TGraph2D>("gr_"+lvl));
+      TGraph2D gr2(*fileReader.read<TGraph2D>("gr_"+lvl));    
       gr[lvl]=TGraph(gr2.GetN());
       gr[lvl].SetLineWidth(2);
       double *x=gr2.GetX();
@@ -108,6 +108,14 @@ void plot_1d(Scan_t scan)
       gr[lvl].Sort();
       aux_saver.save(gr[lvl],lvl);
    }
+   TGraph2D grSig(*fileReader.read<TGraph2D>("gr_significance"));
+   TGraph gr1DSig=TGraph(grSig.GetN());
+   double *xSig=grSig.GetX();
+   double *zSig=grSig.GetZ();
+   for (int i=0; i<grSig.GetN(); i++) {
+      gr1DSig.SetPoint(i,xSig[i],zSig[i]);
+   }
+   gr1DSig.Sort();
 
    for (TString lvl: {"1","2"}) {
       gr[lvl]=TGraph(gr["exp+"+lvl]);
@@ -184,6 +192,7 @@ void plot_1d(Scan_t scan)
    l2.SetColumnSeparation(-0.2);
    l2.DrawClone();
 
+
    TLatex l=gfx::cornerLabel(title,3);
    l.SetY(0.22);
    l.DrawClone();
@@ -193,6 +202,57 @@ void plot_1d(Scan_t scan)
 
    can.RedrawAxis();
    saver.save(can,sScan,true,false);
+
+   TCanvas can2;
+   gr1DSig.Draw("al");
+   gr1DSig.SetLineColor(kBlue);
+   gr1DSig.SetLineWidth(2);
+   gr1DSig.SetTitle(";m_{NLSP} [GeV];Significance (s.d.)");
+   gr1DSig.GetYaxis()->SetTitleOffset(0.8);
+   if (scan == TChiNg) gr1DSig.GetXaxis()->SetRangeUser(300,1150);
+   if (scan == TChiWg) gr1DSig.GetXaxis()->SetRangeUser(300,1000);
+   if (scan == TChiNg) gr1DSig.GetYaxis()->SetRangeUser(-3,3);
+   if (scan == TChiWg) gr1DSig.GetYaxis()->SetRangeUser(-3,3);
+   l.DrawClone();
+   l3.DrawClone();
+   can2.RedrawAxis();
+   saver.save(can2,sScan+"_significance",true,false);
+}
+
+// save significance for 2D
+void plot_significance2D(Scan_t scan)
+{
+   assert(scan!=TChiWg);
+   TString sScan;
+   if (scan==T5gg) sScan="T5gg";
+   if (scan==T5Wg) sScan="T5Wg";
+   if (scan==T6gg) sScan="T6gg";
+   if (scan==T6Wg) sScan="T6Wg";
+   if (scan==GGM) sScan="GGM";
+
+   io::RootFileReader fileReader(TString::Format("limits_%s.root",sScan.Data()));
+   io::RootFileSaver saver("plots.root","limit_2d");
+
+   TH2F grSig(*fileReader.read<TH2F>("h_significance"));
+   
+   TCanvas can;
+  // can.SetLogy();
+
+   grSig.Draw("colz");
+   if (scan==T5gg) grSig.SetTitle("m_{#tilde{g}};m_{#tilde{#chi_{1}^{0}}}");
+   if (scan==T5Wg) grSig.SetTitle("m_{#tilde{g}};m_{#tilde{#chi_{1}^{0/#pm}}}");
+   if (scan==T6gg) grSig.SetTitle("m_{#tilde{q}};m_{#tilde{#chi_{1}^{0}}}");
+   if (scan==T6Wg) grSig.SetTitle("m_{#tilde{q}};m_{#tilde{#chi_{1}^{0/#pm}}}");
+   grSig.GetZaxis()->SetTitle("Significance (s.d.)");
+   grSig.GetZaxis()->SetRangeUser(-3,3);
+   grSig.GetXaxis()->SetRangeUser(800,2500);
+   grSig.GetYaxis()->SetTitleOffset(0.8);
+
+   can.RedrawAxis();
+
+   saver.save(can,sScan+"_significance",true,false);
+
+
 }
 
 // save limits for auxiliary material
@@ -202,10 +262,13 @@ void save_aux(Scan_t scan)
    TString sScan;
    if (scan==T5gg) sScan="T5gg";
    if (scan==T5Wg) sScan="T5Wg";
+   if (scan==T6gg) sScan="T6gg";
+   if (scan==T6Wg) sScan="T6Wg";
    if (scan==GGM) sScan="GGM";
 
    io::RootFileReader fileReader(TString::Format("limits_%s.root",sScan.Data()));
    io::RootFileSaver aux_saver(TString::Format("aux_limits_%s.root",sScan.Data()),"");
+
    std::map<TString,TGraph> gr;
    for (TString lvl: {"exp","exp+1","exp-1","obs","obs+1","obs-1"}) {
       TGraph gr(*fileReader.read<TGraph>("gr_"+lvl+"C_sm"));
@@ -223,8 +286,9 @@ void save_aux(Scan_t scan)
 extern "C"
 void run()
 {
-   plot_1d(TChiWg);
-   plot_1d(TChiNg);
+  // plot_1d(TChiWg);
+ //  plot_1d(TChiNg);
+   plot_significance2D(T5gg);
    
  //  save_aux(T5gg);
  //  save_aux(T5Wg);
