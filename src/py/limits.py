@@ -555,7 +555,7 @@ def smoothContours(scan):
     f.Close()
 
 if __name__ == '__main__':
-    basedir="/user/jschulz/2016/photonmet/"
+    basedir="../"
     outdir=basedir+"output/"
     signal_scan="signal_scan_v19.root"
     rho=-0.0
