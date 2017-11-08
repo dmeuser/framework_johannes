@@ -453,13 +453,13 @@ void runScan_80X(Scan_t scan)
       float Ngen=hcf->GetBinContent(2);
       if (scan==T5Wg) {
          // consider that gg, gW, and WW events were generated
-         Ngen/=2.0;
+         //Ngen/=2.0;
       }
       else if (scan==T5gg) {
          Ngen/=4.0;
       }
       else if (scan==T6Wg) {
-         Ngen/=2.0;
+         //Ngen/=2.0;
       }
       else if (scan==T6gg) {
          Ngen/=4.0;
@@ -541,10 +541,10 @@ void runScan_80X(Scan_t scan)
 extern "C"
 void run()
 {
- //   runScan_80X(TChiWg);
-    runScan_80X(TChiNg);
- //   runScan_80X(T5Wg);
-    runScan_80X(T5gg);
-    runScan_80X(T6Wg);
-    runScan_80X(T6gg);  
+    //runScan_80X(TChiWg);
+    //runScan_80X(TChiNg);
+    runScan_80X(T5Wg);
+    //runScan_80X(T5gg);
+    //runScan_80X(T6Wg);
+    //runScan_80X(T6gg);  
 }

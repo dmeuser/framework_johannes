@@ -626,6 +626,9 @@ void run()
       int events =0;
       int processEvents=cfg.processFraction*dss.entries;
       while (reader.Next()){
+        std::cout<<dss.name<<std::endl;
+        std::cout<<*runNo<<":"<<*lumNo<<":"<<*evtNo<<": "<<photons->at(0).p.Pt()<<std::endl;
+        return;
          iEv++;
          if (iEv>processEvents) break;
          if (iEv%(std::max(processEvents/10,1))==0){

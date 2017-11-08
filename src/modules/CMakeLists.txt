@@ -1,36 +1,6 @@
 set(MODULES
-  weighting
-  fit_weighting
-  SR_variance
-  SR_JES
-  JES_shift
-  fit_JES
-  JES_studies
-  tests
-  distributions
-  trigger
-  prescales
-  matching
-  genComp
-  efake
-  8TeVXcheck
-  eventPicker
-  zinvisible
-  roofit
-  SFapplication
-  SRbinning
-  signal_scan
-  limits
-  correlation_test
-  pu
-  acceptance
-  mets_gain
-  xsec_plots
-  wz_ratio
-  80XXcheck
-  plot_limit
-  plot_uncert
-  cutflow
+  danilo_plot_combined
+  danilo_datacards
   )
 
 foreach(MODULE ${MODULES})

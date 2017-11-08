@@ -895,13 +895,12 @@ void run()
 //   plot("pre_ph165/","METS_logx",1,PRE);
 
    // Signal region
-   /*
-   plot("pre_ph165/c_S80/MT300/","ph1Pt",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","MET",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","METS",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","HT",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","METSHT",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","STg",5,SR_BLIND);
+   //~ plot("pre_ph165/c_S80/MT300/","ph1Pt",5,SR_BLIND);
+   //~ plot("pre_ph165/c_S80/MT300/","MET",5,SR_BLIND);
+   //~ plot("pre_ph165/c_S80/MT300/","METS",5,SR_BLIND);
+   //~ plot("pre_ph165/c_S80/MT300/","HT",5,SR_BLIND);
+   //~ plot("pre_ph165/c_S80/MT300/","METSHT",5,SR_BLIND);
+   //~ plot("pre_ph165/c_S80/MT300/","STg",5,SR_BLIND);
    plot("pre_ph165/c_MET300/MT300/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
    plot("pre_ph165/c_MET300/MT300/","STg",{480,600,800,1000,1300,1600},{120,200,200,300,300},SR);  
    plot("pre_ph165/c_MET300/MT300/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},SR);
