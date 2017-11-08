@@ -135,6 +135,7 @@ void run(Scan_t scan)
    if (scan==T6gg) sScan="T6gg";
    if (scan==T6Wg) sScan="T6Wg";
    if (scan==TChiNg) sScan="TChiNg";
+   if (scan==GGM) sScan="GGM";  
    TString title;
    if (scan==T5gg) title=";m#kern[0.1]{_{#lower[-0.12]{#tilde{g}}}} [GeV];m#kern[0.1]{_{#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}}} [GeV];";
    if (scan==T5Wg) title=";m#kern[0.1]{_{#lower[-0.12]{#tilde{g}}}} [GeV];m#kern[0.1]{_{#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0/#pm}}}#kern[-1.3]{#scale[0.85]{_{1}}}}} [GeV];";
@@ -142,6 +143,7 @@ void run(Scan_t scan)
    if (scan==T6gg) title=";m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} [GeV];m#kern[0.1]{_{#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}}} [GeV];";
    if (scan==T6Wg) title=";m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} [GeV];m#kern[0.1]{_{#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0/#pm}}}#kern[-1.3]{#scale[0.85]{_{1}}}}} [GeV];";
    if (scan==TChiNg) title=";m_{NLSP} [GeV];";
+   if (scan==GGM) title=";m_{#tilde{B}} (GeV);m_{#tilde{W}} (GeV)";  
    io::RootFileReader fileReader(TString::Format("signal_scan_%s.root",cfg.treeVersion.Data()),"pre_ph165");
 
    io::RootFileSaver saver("plots.root","");
@@ -167,13 +169,13 @@ void run(Scan_t scan)
       x=grScaleUnc.GetX();
       z=grScaleUnc.GetZ();
       for (int i=0; i<grScaleUnc.GetN(); i++) {
-         grSU.SetPoint(i,x[i],z[i]);
+         grSU.SetPoint(i,x[i],100*z[i]);
       }
       grSU.Sort();
       grSU.Draw("apl");
-      grSU.GetYaxis()->SetRangeUser(0,0.009);
+      grSU.GetYaxis()->SetRangeUser(0,20);
       grSU.GetYaxis()->SetNoExponent();
-      drawLabels(scan,"Scale uncertainty on acceptance");
+      drawLabels(scan,"Scale uncertainty in % on acceptance");
       saver.save(can,"scaleUnc/"+sScan);
 
       TGraph2D grCont(*fileReader.read<TGraph2D>("c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/"+sScan+"_contamination"));
@@ -209,9 +211,12 @@ void run(Scan_t scan)
       // drawContours(grAcc,scan);
       drawLabels(scan,"Acceptance");
       if (scan==GGM) {
-         hAcc.GetYaxis()->SetRangeUser(370,760);
-      } else if (scan==T5gg || scan==T5Wg) {
-         hAcc.GetXaxis()->SetRangeUser(1200,2000);
+         hAcc.GetYaxis()->SetRangeUser(265,1050);
+      } else if (scan==T5gg || scan==T5Wg ) {
+         hAcc.GetXaxis()->SetRangeUser(1275,2500);
+      }
+      else if (scan==T6gg || scan==T6Wg ) {
+         hAcc.GetXaxis()->SetRangeUser(1100,2150);
       }
       saver.save(can,"acceptance/"+sScan+"_colz");
 
@@ -219,9 +224,10 @@ void run(Scan_t scan)
          TGraph2D grScaleUnc(*fileReader.read<TGraph2D>("c_MET300/MT300/STg/"+sScan+"_scaleUnc"));
          grScaleUnc.SetTitle(title);
          TH2D hScaleUnc(*grScaleUnc.GetHistogram());
+         hScaleUnc.Scale(100.);
          hScaleUnc.Draw("colz");
          gfx::setupZaxis(hScaleUnc,false);
-         drawLabels(scan,"Scale uncertainty on acceptance");
+         drawLabels(scan,"Scale uncertainty in % on acceptance");
          saver.save(can,"scaleUnc/"+sScan+"_colz");
       }
 
@@ -241,10 +247,11 @@ void run(Scan_t scan)
 extern "C"
 void run()
 {
-//   run(T5gg);
+   run(GGM);
+ //  run(T5gg);
  //  run(T5Wg);
-   run(TChiWg);
+ //  run(TChiWg);
  //  run(T6gg);
-   run(T6Wg);
-//   run(TChiNg);
+ //  run(T6Wg);
+ //  run(TChiNg);
 }

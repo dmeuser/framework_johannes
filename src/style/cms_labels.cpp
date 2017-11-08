@@ -17,9 +17,9 @@ void style::draw_lumi(TPad &pad, bool simulation, bool drawLumiText)
 
    if (simulation){
       if (extraText!=""){
-         extraText="simulation #bullet "+extraText;
+         extraText="Simulation #bullet "+extraText;
       }else{
-         extraText="simulation";
+         extraText="Simulation";
       }
    }
 

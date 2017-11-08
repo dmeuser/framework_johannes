@@ -30,22 +30,22 @@ void run()
    hist::Histograms<TH1F> hs_pix(cfg.datasets.getDatasubsetNames(datasetsToUse));
    hist::Histograms<TH1F> hs_genE(cfg.datasets.getDatasubsetNames(datasetsToUse));
 
-   ADD_HIST("pre/ph1Pt",";#gamma_{1} PT;Events / bin",{75,825},{25});
+   ADD_HIST("pre/ph1Pt",";PT(#gamma);Events / bin",{75,825},{25});
    ADD_HIST("pre/MET"  ,";MET;Events / bin"          ,{0,625},{25});
 //   ADD_HIST("pre/METS" ,";METSIG;Events / bin"       ,{0,20,30,60,62},{5,10,15,2});
-   ADD_HIST("pre/MT"    ,";MT(#gamma_{1},%MET);EventsBIN"   ,{0,625},{25});
+   ADD_HIST("pre/MT"    ,";MT(#gamma,%MET);EventsBIN"   ,{0,625},{25});
    ADD_HIST("pre/STg"   ,";STg;EventsBIN"           ,{75,1025},{25});
 
-   ADD_HIST("loose/ph1Pt",";#gamma_{1} PT;Events / bin",{75,825},{25});
+   ADD_HIST("loose/ph1Pt",";PT(#gamma);Events / bin",{75,825},{25});
    ADD_HIST("loose/MET"  ,";MET;Events / bin"         ,{25,625},{25});
 //   ADD_HIST("loose/METS" ,";METSIG;Events / bin"       ,{0,20,30,60,62},{5,10,15,2});
-   ADD_HIST("loose/MT"    ,";MT(#gamma_{1},%MET);EventsBIN"  ,{25,625},{25});
+   ADD_HIST("loose/MT"    ,";MT(#gamma,%MET);EventsBIN"  ,{25,625},{25});
    ADD_HIST("loose/STg"   ,";STg;EventsBIN"           ,{100,1025},{25});
 
-   ADD_HIST("CR/ph1Pt",";#gamma_{1} PT;Events / bin",{0,1100},{100});
+   ADD_HIST("CR/ph1Pt",";PT(#gamma);Events / bin",{0,1100},{100});
    ADD_HIST("CR/MET"  ,";MET;Events / bin"          ,{0,900},{100});
 //   ADD_HIST("CR/METS" ,";METSIG;Events / bin"       ,{0,20,30,60,62},{5,10,15,2});
-   ADD_HIST("CR/MT"    ,";MT(#gamma_{1},%MET);EventsBIN"   ,{0,700},{100});
+   ADD_HIST("CR/MT"    ,";MT(#gamma,%MET);EventsBIN"   ,{0,700},{100});
    ADD_HIST("CR/STg"   ,";STg;EventsBIN"           ,{100,1700},{100});
 
   
@@ -88,6 +88,7 @@ void run()
 
             if (fabs(ph.p.Eta())>1.4442) continue;
             if (ph.sigmaIetaIeta<0.001 || ph.sigmaIphiIphi<0.001) continue;
+            if ((ph.seedCrystalE/ph.p.Pt()) < 0.3) continue;
             if (ph.hasPixelSeed){
                // hs_pix.fill("pre/phPt",ph.p.Pt());
                lPixPho.push_back(&ph);
@@ -121,6 +122,16 @@ void run()
 
             float phoPt=pho[0]->p.Pt();
             float met=MET->p.Pt();
+
+            std::vector<tree::Jet> cjets=phys::getCleanedJets(*jets);
+            bool clean_MET = true;
+         
+            for (auto const &jet: cjets) {
+               if (jet.p.Pt() < 100) continue;            
+               if (std::fabs(MET->p.DeltaPhi(jet.p)) < 0.3) clean_MET = false;
+            }
+   
+            if (!clean_MET) continue;
 
             float minDR=std::numeric_limits<float>::max();
             for (tree::Jet const &jet: *jets){
@@ -218,7 +229,7 @@ void run()
       h_pred.SetFillStyle(0);
 
       for (int i=0; i <= h_pred_syst_err.GetNbinsX(); i++){
-         h_pred_syst_err.SetBinError(i, (h_pred_syst_err.GetBinContent(i)*0.3));
+         h_pred_syst_err.SetBinError(i, (h_pred_syst_err.GetBinContent(i)*0.5));
       }
       h_pred_syst_err.SetLineColor(kWhite);
       h_pred_syst_err.SetFillColor(kRed+1);
@@ -231,17 +242,17 @@ void run()
       h_pred.Draw("same");
       TGraphErrors gr_genE(&h_genE); // to show errors of points outside of range
       gr_genE.Draw("p0");
-            le.append(h_genE, "gen matched e#rightarrow#gamma","pe");
-      le.append(h_pred, "predicted e#rightarrow#gamma","l");
+            le.append(h_genE, "Gen. matched e#rightarrow#gamma","pe");
+      le.append(h_pred, "Predicted e#rightarrow#gamma","l");
       le.append(*h_pred_err, "#sigma_{stat, pred}","f");
       le.append(h_pred_syst_err, "#sigma_{syst, pred}","f");     
       TLegend leg=le.buildLegend(.55,.7);
       leg.Draw();
 
       can.cdLow();
-      TH1F hRatio=hist::getRatio(h_genE,h_pred,"ratio",hist::ONLY1);
-      TGraphErrors grRatioStat=hist::getRatioGraph(*(TH1F*)h_pred_err,h_pred,"ratio",hist::ONLY1);
-      TGraphErrors grRatioSyst=hist::getRatioGraph((TH1F)h_pred_syst_err,h_pred,"ratio",hist::ONLY1);
+      TH1F hRatio=hist::getRatio(h_genE,h_pred,"Gen./Pred.",hist::ONLY1);
+      TGraphErrors grRatioStat=hist::getRatioGraph(*(TH1F*)h_pred_err,h_pred,"Ratio",hist::ONLY1);
+      TGraphErrors grRatioSyst=hist::getRatioGraph((TH1F)h_pred_syst_err,h_pred,"Ratio",hist::ONLY1);
 
       hRatio.SetMaximum(1.9);
       hRatio.SetMinimum(0.1);

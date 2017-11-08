@@ -44,8 +44,8 @@ void gfx::getDrawnAxes(TPad const &pad,TAxis*&out_xax,TAxis*&out_yax)
 
 void gfx::setupAxes(TAxis &x,TAxis &y)
 {
-   x.CenterTitle();
-   y.CenterTitle();
+ //  x.CenterTitle();
+ //  y.CenterTitle();
    TString unit=parseAxis(x);
    parseAxis(y);
 
@@ -82,12 +82,14 @@ void gfx::setupDrawnAxes(SplitCan const &spcan)
    size=gStyle->GetTitleSize("y")/f;
    off=gStyle->GetTitleOffset("y")*f;
    y->SetTitleSize(size);
+ //  y->SetTitleSize(0.55);
    y->SetTitleOffset(off);
    size=gStyle->GetLabelSize("y")/f;
    off=gStyle->GetLabelOffset("y")*f;
    y->SetLabelSize(size);
-   y->SetLabelOffset(off);
-
+   y->SetLabelOffset(0.008);
+   x->SetLabelOffset(0.02);
+   
    size=gStyle->GetTitleSize("x")/f;
    x->SetTitleSize(size);
    size=gStyle->GetLabelSize("x")/f;
@@ -140,7 +142,7 @@ std::pair<TString,TString> gfx::parseTitle(TString const &title)
       ,std::make_tuple("METSHT","%MET / %HT^{#scale[.8]{1/2}}","GeV^{#scale[.8]{1/2}}")
       ,std::make_tuple("METSIG","#font[52]{S}","")
       ,std::make_tuple("VMET","#vec{E}_{#scale[.8]{T}}^{#scale[.8]{miss}}","GeV")
-      ,std::make_tuple("MET","E_{#scale[.8]{T}}^{#scale[.8]{miss}}","GeV")
+      ,std::make_tuple("MET","p_{#scale[.8]{T}}^{#scale[.8]{miss}}","GeV")
       ,std::make_tuple("HTG","H_{#scale[.8]{T}}^{#scale[.8]{gen}}","GeV")
       ,std::make_tuple("HT","H_{#scale[.8]{T}}","GeV")
       ,std::make_tuple("MT","M_{#scale[.8]{T}}","GeV")
@@ -159,7 +161,7 @@ std::pair<TString,TString> gfx::parseTitle(TString const &title)
       if (nt.Contains(std::get<0>(r))){
          nt.ReplaceAll(std::get<0>(r),std::get<1>(r));
          if (std::get<2>(r).Length()>0){
-            nt+=TString::Format(" [%s]",std::get<2>(r).Data());
+            nt+=TString::Format(" (%s)",std::get<2>(r).Data());
             unit=std::get<2>(r);
          }
       }

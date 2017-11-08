@@ -15,29 +15,39 @@ Config const &cfg=Config::get();
 
 enum Scan_t
 {
-   T5gg_74X,
-   T5Wg_74X,
+   T5gg,
+   T5Wg,
+   T6gg,
+   T6Wg,
+   TChiWG,
+   TChiNg,   
    GGM,
 };
 
 
-void runScan_74X(Scan_t scan)
+void runScan(Scan_t scan)
 {
 
    TString dsName;
    if (scan==GGM) dsName="GGM";
-   if (scan==T5gg_74X) dsName="T5gg";
-   if (scan==T5Wg_74X) dsName="T5Wg";
+   if (scan==T5gg) dsName="T5gg";
+   if (scan==T5Wg) dsName="T5Wg";
+   if (scan==T6gg) dsName="T6gg";
+   if (scan==T6Wg) dsName="T6Wg";
+   if (scan==TChiWG) dsName="TChiWG";
+   if (scan==TChiNg) dsName="TChiNg";
+   
 
    float fPt=0;
    float fDR=0;
    float fPr=0;
-   float fMS=0;
+   float fMET=0;
    float fMT=0;
    float fSR=0;
    float fSR1=0;
    float fSR2=0;
    float fSR3=0;
+   float fSR4=0;  
    // int i=0;
    for (Datasubset const &dss: cfg.datasets.getDataset(dsName).subsets){
       // i++;
@@ -63,6 +73,7 @@ void runScan_74X(Scan_t scan)
          for (tree::Photon const &ph: *photons){
             if (ph.sigmaIetaIeta<0.001 || ph.sigmaIphiIphi<0.001) continue;
             if (fabs(ph.p.Eta())>1.4442) continue;
+            if ((ph.seedCrystalE/ph.p.Pt()) < 0.3) continue;
             if (ph.hasPixelSeed){
                lPixPho.push_back(&ph);
             } else {
@@ -85,6 +96,14 @@ void runScan_74X(Scan_t scan)
          // jet related
          std::vector<tree::Jet> cjets=phys::getCleanedJets(*jets);
 
+         bool clean_MET = true;
+
+         for (auto const &jet: cjets) {
+            if (jet.p.Pt() < 100) continue;            
+            if (std::fabs(MET->p.DeltaPhi(jet.p)) < 0.3) clean_MET = false;
+         }
+         if (clean_MET == false) continue;
+
          if (scan!=GGM) {
             // fast-sim strange jet -> strange met veto
             // https://twiki.cern.ch/twiki/bin/view/CMS/SUSRecommendationsICHEP16
@@ -106,20 +125,6 @@ void runScan_74X(Scan_t scan)
             }
          }
 
-         if (scan==T5Wg_74X) {
-            // veto gg and WW events
-            int Ng=0;
-            int id;
-            for (tree::GenParticle gp: *genParticles) {
-               if (!gp.fromHardProcess) continue;
-               id=std::abs(gp.pdgId);
-               if (id==22) Ng++;
-            }
-            if (Ng==2) continue; // gg
-            if (Ng==0) continue; // WW
-            // else it' Wg
-         }
-
          float minDR=std::numeric_limits<float>::max();
          for (tree::Jet const &jet: *jets){
             if (jet.isLoose && jet.p.Pt()>30){
@@ -135,12 +140,15 @@ void runScan_74X(Scan_t scan)
          fDR+=fEventWeight;
          fPr+=fEventWeight;
 
-         if (MET->sig>80) {
-            fMS+=fEventWeight;
+         if (MET->p.Pt() > 300) {
+            fMET+=fEventWeight;
             if (MT>300) {
                fMT+=fEventWeight;
-               fSR+=fEventWeight;
-               if (STg>1000)     fSR3+=fEventWeight;
+               if (STg>600){
+                  fSR+=fEventWeight;
+               }
+               if (STg>1300)     fSR4+=fEventWeight;
+               else if (STg>1000) fSR3+=fEventWeight;              
                else if (STg>800) fSR2+=fEventWeight;
                else if (STg>600) fSR1+=fEventWeight;
             }
@@ -148,7 +156,6 @@ void runScan_74X(Scan_t scan)
       } // evt loop
       TH1F *hcf=(TH1F*)file.Get("TreeWriter/hCutFlow");
       float fI=hcf->GetBinContent(3);
-      if (scan==T5Wg_74X) fI*=0.5; // dont count WW,gg
       io::log<<dsName;
       io::log<<dss.xsec;
       float const Ngen=fI;
@@ -156,18 +163,22 @@ void runScan_74X(Scan_t scan)
       // io::log<<TString::Format("pre %.2f\nSR  %.2f\nST  %.2f",fPr/fI,fSR/fI,fST/fI);
       io::log<<TString::Format("ini %.2f & (%.0f$\\%%$)\n"
                                "pre %.2f & (%.0f$\\%%$)\n"
-                               "MS  %.2f & (%.0f$\\%%$)\n"
+                               "MET  %.2f & (%.0f$\\%%$)\n"
                                "MT  %.2f & (%.0f$\\%%$)\n"
+                               "SR %.2f & (%.0f$\\%%$)\n"
                                "SR1 %.2f & (%.0f$\\%%$)\n"
                                "SR2 %.2f & (%.0f$\\%%$)\n"
-                               "SR3 %.2f & (%.0f$\\%%$)",
+                               "SR3 %.2f & (%.0f$\\%%$)\n"
+                               "SR4 %.2f & (%.0f$\\%%$)",
                                fI*w,fI/fI*100,
                                fPr*w,fPr/fI*100,
-                               fMS*w,fMS/fI*100,
+                               fMET*w,fMET/fI*100,
                                fMT*w,fMT/fI*100,
+                               fSR*w,fSR/fI*100,
                                fSR1*w,fSR1/fI*100,
                                fSR2*w,fSR2/fI*100,
-                               fSR3*w,fSR3/fI*100
+                               fSR3*w,fSR3/fI*100,
+                               fSR4*w,fSR4/fI*100
          );
       file.Close();
    } // datasets
@@ -176,7 +187,8 @@ void runScan_74X(Scan_t scan)
 extern "C"
 void run()
 {
-   runScan_74X(GGM);
-   runScan_74X(T5gg_74X);
-   runScan_74X(T5Wg_74X);
+//   runScan(GGM);
+ //  runScan(T5gg);
+   runScan(T5Wg);
+   runScan(TChiWG);   
 }

@@ -92,7 +92,7 @@ void plot_1d(Scan_t scan)
                          "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}} #rightarrow #gamma/(H,Z)#tilde{G}";
    io::RootFileReader fileReader(TString::Format("uncert_%s.root",sScan.Data()));
    io::RootFileSaver saver("plots.root","limit_1d");
-   std::map<TString,TGraph> gr,grISR;
+   std::map<TString,TGraph> gr,grISR,grMet;
    TCanvas can;
    for (TString lvl: {"statB1","statB2","statB3","statB4"}) {
       TGraph2D gr2(*fileReader.read<TGraph2D>("g_"+lvl));    
@@ -104,11 +104,11 @@ void plot_1d(Scan_t scan)
          gr[lvl].SetPoint(i,x[i],z[i]);
       }
       gr[lvl].Sort();
-      gr[lvl].GetYaxis()->SetRangeUser(0,0.3);
+      gr[lvl].GetYaxis()->SetRangeUser(0,20);
    }
    gr["statB1"].GetYaxis()->SetTitleSize(.055);
    gr["statB1"].GetYaxis()->SetTitleOffset(1.5);
-   gr["statB1"].SetTitle(";m_{NLSP} [GeV];#sigma_{stat} in %   ");
+   gr["statB1"].SetTitle(";m_{NLSP} [(GeV);#sigma_{stat} in %   ");
    gr["statB1"].Draw("a l");
    gr["statB2"].Draw("same l");
    gr["statB3"].Draw("same l");
@@ -122,7 +122,7 @@ void plot_1d(Scan_t scan)
    le.append(gr["statB2"],"S_{T}^{#gamma}: 800-1000 GeV","l");
    le.append(gr["statB3"],"S_{T}^{#gamma}: 1000-1300 GeV","l");
    le.append(gr["statB4"],"S_{T}^{#gamma}: 1300-#infty GeV","l");
-   TLegend l1=le.buildLegend(.48,.6,.97,.92);
+   TLegend l1=le.buildLegend(.42,.6,.92,.92);
    l1.DrawClone();
    TLatex l=gfx::cornerLabel(title,3);
    l.SetY(0.85);
@@ -134,35 +134,72 @@ void plot_1d(Scan_t scan)
    saver.save(can,sScan+"_uncert",true,false);
    
    TCanvas can2;
+   can2.cd();
    for (TString lvl: {"ISRB1","ISRB2","ISRB3","ISRB4"}) {
-      TGraph grISR(*fileReader.read<TGraph>("g_"+lvl));    
-      gr[lvl].SetLineWidth(2);
-      gr[lvl].Sort();
-      gr[lvl].GetYaxis()->SetRangeUser(0,0.3);
+      TGraph2D gr2(*fileReader.read<TGraph2D>("g_"+lvl));
+      grISR[lvl]=TGraph(gr2.GetN()); 
+      grISR[lvl].SetLineWidth(2);
+      double *x=gr2.GetX();
+      double *z=gr2.GetZ();
+      for (int i=0; i<gr2.GetN(); i++) {
+         grISR[lvl].SetPoint(i,x[i],z[i]);
+      }      
+      grISR[lvl].Sort();
+      grISR[lvl].GetYaxis()->SetRangeUser(0,20);
    }
-   gr["ISRB1"].GetYaxis()->SetTitleSize(.055);
-   gr["ISRB1"].GetYaxis()->SetTitleOffset(1.5);
-   gr["ISRB1"].SetTitle(";m_{NLSP} [GeV];#sigma_{stat} in %   ");
-   gr["ISRB1"].Draw("a l");
-   gr["ISRB2"].Draw("same l");
-   gr["ISRB3"].Draw("same l");
-   gr["ISRB4"].Draw("same l");
-   gr["ISRB1"].SetLineColor(kBlue);
-   gr["ISRB2"].SetLineColor(kBlue+2);
-   gr["ISRB3"].SetLineColor(kBlue+4);
-   gr["ISRB4"].SetLineColor(kBlue+8);
+   grISR["ISRB1"].GetYaxis()->SetTitleSize(.055);
+   grISR["ISRB1"].GetYaxis()->SetTitleOffset(1.5);
+   grISR["ISRB1"].SetTitle(";m_{NLSP} (GeV);#sigma_{ISR} in %   ");
+   grISR["ISRB1"].Draw("a l");
+   grISR["ISRB2"].Draw("same l");
+   grISR["ISRB3"].Draw("same l");
+   grISR["ISRB4"].Draw("same l");
+   grISR["ISRB1"].SetLineColor(kBlue);
+   grISR["ISRB2"].SetLineColor(kBlue+2);
+   grISR["ISRB3"].SetLineColor(kBlue+4);
+   grISR["ISRB4"].SetLineColor(kBlue+8);
    l1.DrawClone();
    l.DrawClone();
    l3.DrawClone();
    saver.save(can2,sScan+"_uncert_ISR",true,false);
+
+   TCanvas can3;
+   can3.cd();
+   for (TString lvl: {"MetB1","MetB2","MetB3","MetB4"}) {
+      TGraph2D gr2(*fileReader.read<TGraph2D>("g_"+lvl));
+      grMet[lvl]=TGraph(gr2.GetN()); 
+      grMet[lvl].SetLineWidth(2);
+      double *x=gr2.GetX();
+      double *z=gr2.GetZ();
+      for (int i=0; i<gr2.GetN(); i++) {
+         grMet[lvl].SetPoint(i,x[i],z[i]);
+      }      
+      grMet[lvl].Sort();
+      grMet[lvl].GetYaxis()->SetRangeUser(0,20);
+   }
+   grMet["MetB1"].GetYaxis()->SetTitleSize(.055);
+   grMet["MetB1"].GetYaxis()->SetTitleOffset(1.5);
+   grMet["MetB1"].SetTitle(";m_{NLSP} (GeV);#sigma_{FastSim p_{T}^{miss}} in %   ");
+   grMet["MetB1"].Draw("a l");
+   grMet["MetB2"].Draw("same l");
+   grMet["MetB3"].Draw("same l");
+   grMet["MetB4"].Draw("same l");
+   grMet["MetB1"].SetLineColor(kBlue);
+   grMet["MetB2"].SetLineColor(kBlue+2);
+   grMet["MetB3"].SetLineColor(kBlue+4);
+   grMet["MetB4"].SetLineColor(kBlue+8);
+   l1.DrawClone();
+   l.DrawClone();
+   l3.DrawClone();
+   saver.save(can3,sScan+"_uncert_Met",true,false);
 
 }
 
 extern "C"
 void run()
 {
-   plot_1d(TChiWg);
- //  plot_1d(TChiNg);
+  // plot_1d(TChiWg);
+   plot_1d(TChiNg);
    
    
  //  save_aux(T5gg);
