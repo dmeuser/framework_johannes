@@ -246,7 +246,7 @@ void run()
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETph",";|#Delta#phi|(p_{T}^{miss},#gamma_{1});EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETjet",";|#Delta#phi|(p_{T}^{miss},jet_{1});EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJet",";|#Delta#phi|(p_{T}^{miss},nearest jet);EventsBIN",50,0,5);
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh",";|#Delta#phi|(p_{T}^{miss},nearest jet/#gamma);EventsBIN",50,0,5);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh",";|#Delta#phi(p_{T}^{miss},nearest jet/#gamma)| (radians);EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh_phoPtl500",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh_phoPtl700",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);   
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh_phoPtg700",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);   
@@ -512,6 +512,7 @@ void run()
    ADD_HIST("pre_ph165/c_MET300/MT300/STg600/absphiMETph",";|#Delta#phi|(p_{T}^{miss},#gamma_{1});EventsBIN",50,0,5);
    ADD_HIST("pre_ph165/c_MET300/MT300/STg600/MET",";p_{T}^{miss};EventsBIN",150,0,1500);
    ADD_HIST("pre_ph165/c_MET300/MT300/STg600/DeltaPhiMETjet100",";#Delta#phi(p_{T}^{miss},jet_{i} PT > 100 GeV);EventsBIN",32,0,3.2);
+   ADD_HIST("pre_ph165/c_MET300/MT300/STg600/absphiMETnJetPh",";|#Delta#phi|(p_{T}^{miss},nearest jet/#gamma);EventsBIN",50,0,5);
 
 
    ADD_HIST("pre_ph165/c_MET300/MT300/absphiMETHT",";|#Delta#phi|(p_{T}^{miss},#vec{HT});EventsBIN",50,0,5);
@@ -555,9 +556,9 @@ void run()
    h2s.addHist("METS MET",";METSIG;MET;Events / bin",40,0,2000,40,0,1000);
    h2s.addHist("METSHT MT",";METSHT;MT(#gamma_{1},p_{T}^{miss});Events / bin",40,0,80,40,0,2000);
    h2s.addHist("METSHT METS",";METSHT;METSIG;Events / bin",40,0,80,40,0,2000);
-   h2s.addHist("Iso/ec",";#gamma_{1} PT;EcalPFCluster Iso [GeV];Events / bin",50,0,1000,50,0,40);
-   h2s.addHist("Iso/hc",";#gamma_{1} PT;HcalPFCluster Iso [GeV];Events / bin",50,0,1000,50,0,40);
-   h2s.addHist("Iso/tr",";#gamma_{1} PT;SC Track Iso [GeV];Events / bin",50,0,1000,50,0,40);
+   h2s.addHist("Iso/ec",";#gamma_{1} PT;EcalPFCluster Iso (GeV);Events / bin",50,0,1000,50,0,40);
+   h2s.addHist("Iso/hc",";#gamma_{1} PT;HcalPFCluster Iso (GeV);Events / bin",50,0,1000,50,0,40);
+   h2s.addHist("Iso/tr",";#gamma_{1} PT;SC Track Iso (GeV);Events / bin",50,0,1000,50,0,40);
    h2s.addHist("pt MET",";#gamma_{1} PT;MET;Events / bin",50,0,1000,50,0,1000);
    h2s.addHist("pt MT",";#gamma_{1} PT;MT(#gamma_{1},p_{T}^{miss});Events / bin",50,0,1000,40,0,2000);
    h2s.addHist("Ngl Ngpix",";N_{#gamma loose};N_{#gamma pix};Events / bin",5 ,-.5, 5-.5,5 ,-.5, 5-.5);
@@ -626,9 +627,6 @@ void run()
       int events =0;
       int processEvents=cfg.processFraction*dss.entries;
       while (reader.Next()){
-        std::cout<<dss.name<<std::endl;
-        std::cout<<*runNo<<":"<<*lumNo<<":"<<*evtNo<<": "<<photons->at(0).p.Pt()<<std::endl;
-        return;
          iEv++;
          if (iEv>processEvents) break;
          if (iEv%(std::max(processEvents/10,1))==0){
@@ -663,11 +661,6 @@ void run()
                if (ph.isTight15)  tPho15.push_back(&ph);                        
             }
          }
-         debug << "here";
-         for (auto const &IgenP: *intermediateGenParticles){
-            std::cout << "n intermed:  " << IgenP.p.Pt() << " " << IgenP.pdgId << std::endl;
-            }
-         debug << "here";
 
          hs_notPix.fill("pre/Ngl",lPho.size());
          hs_notPix.fill("pre/Ngl15",lPho15.size());         
@@ -1173,6 +1166,7 @@ void run()
                      hs.fill("pre_ph165/c_MET300/MT300/STg600/r9",pho[0]->r9);
                      hs.fill("pre_ph165/c_MET300/MT300/STg600/ph1Pt",phoPt);
                      hs.fill("pre_ph165/c_MET300/MT300/STg600/MET",met);
+                     hs.fill("pre_ph165/c_MET300/MT300/STg600/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
                      hs.fill("pre_ph165/c_MET300/MT300/STg600/absphiMETph",std::abs(dPhiMETph));
                      if (std::abs(dPhiMETph) > 0.3) {
                         hs.fill("pre_ph165/c_MET300/MT300/STg600/dPhiMETPhg03/STg",STg);
@@ -1456,7 +1450,7 @@ void run()
    //new SR
       {"pre_ph165/c_MET300/MT300/",{"METSHT","STg", "relPt2Jets", "DeltaS","DeltaS1","METdotPh","Ngl","Ngl15",
          }},
-      {"pre_ph165/c_MET300/MT300/STg600/",{"STg","STg_SRbin","METdotPh","Ngl","Ngl15",
+      {"pre_ph165/c_MET300/MT300/STg600/",{"STg","STg_SRbin","METdotPh","Ngl","Ngl15", "absphiMETnJetPh",
          }},        
       {"pre_ph165/c_MET400/MT400/",{"METSHT","STg",
          }},
@@ -1650,7 +1644,7 @@ void run()
       //new SR
       {"pre_ph165/c_MET300/MT300/",{"METSHT","STg", "relPt2Jets", "DeltaS","DeltaS1","METdotPh","Ngl","Ngl15","ph1Pt","absphiMETHT","absphiPhHT","vecHTPt",
          }},
-      {"pre_ph165/c_MET300/MT300/STg600/",{"STg","STg_SRbin","METdotPh","Ngl","Ngl15","ph1Pt","r9","r9_Stgg1300","MET","absphiMETph","DeltaPhiMETjet100",
+      {"pre_ph165/c_MET300/MT300/STg600/",{"STg","STg_SRbin","METdotPh","Ngl","Ngl15","ph1Pt","r9","r9_Stgg1300","MET","absphiMETph","DeltaPhiMETjet100", "absphiMETnJetPh",
          }},
       {"pre_ph165/c_MET300/MT300/STg600/dPhiMETPhg03/",{"STg","ph1Pt","MET",
          }},      

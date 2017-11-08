@@ -236,7 +236,7 @@ def getMasses(point,scan):
     elif scan==Scan.T5Wg:   pattern="T5Wg_(.*)_(.*)"
     elif scan==Scan.T6gg:   pattern="T6gg_(.*)_(.*)"   
     elif scan==Scan.T6Wg:   pattern="T6Wg_(.*)_(.*)"
-    elif scan==Scan.GGM:    pattern=".*_M2_(.*)_M1_(.*)"
+    elif scan==Scan.GGM:    pattern=".*_(.*)_(.*)"
     elif scan==Scan.TChiWg: pattern="TChiWG_(.*)"
     elif scan==Scan.TChiNg: pattern="TChiNG_(.*)"
       
@@ -478,6 +478,7 @@ def caclulateLimits(scan):
         if scan==Scan.T5Wg: h_Sig.SetBinContent(h_Sig.FindBin(x,y),Significance)
         if scan==Scan.T6gg: h_Sig.SetBinContent(h_Sig.FindBin(x,y),Significance)
         if scan==Scan.T6Wg: h_Sig.SetBinContent(h_Sig.FindBin(x,y),Significance)
+        if scan==Scan.GGM: h_Sig.SetBinContent(h_Sig.FindBin(x,y),Significance)       
         grSig.SetPoint(i,x,y,Significance)
         rLim=rLimits['exp']
         h_exp.SetBinContent(h_exp.FindBin(x,y),rLim)
@@ -498,6 +499,7 @@ def caclulateLimits(scan):
     if scan==Scan.T5Wg: h_Sig.Write("h_"+"significance",rt.TObject.kOverwrite)
     if scan==Scan.T6gg: h_Sig.Write("h_"+"significance",rt.TObject.kOverwrite)
     if scan==Scan.T6Wg: h_Sig.Write("h_"+"significance",rt.TObject.kOverwrite)
+    if scan==Scan.GGM: h_Sig.Write("h_"+"significance",rt.TObject.kOverwrite)    
 
     h_exp.Write("h_exp",rt.TObject.kOverwrite)
     h_exp_xs.Write("h_exp_xs",rt.TObject.kOverwrite)
@@ -555,7 +557,7 @@ def smoothContours(scan):
     f.Close()
 
 if __name__ == '__main__':
-    basedir="../"
+    basedir="/user/jschulz/2016/photonmet/"
     outdir=basedir+"output/"
     signal_scan="signal_scan_v19.root"
     rho=-0.0
@@ -570,19 +572,19 @@ if __name__ == '__main__':
  #   smoothContours(Scan.T5gg)
 
     caclulateLimits(Scan.T5Wg)
-    getContours(Scan.T5Wg)
-    redoHistogram(Scan.T5Wg)
-    smoothContours(Scan.T5Wg)
+ #   getContours(Scan.T5Wg)
+ #   redoHistogram(Scan.T5Wg)
+ #   smoothContours(Scan.T5Wg)
 
-    caclulateLimits(Scan.T6Wg)
-    getContours(Scan.T6Wg)
-    redoHistogram(Scan.T6Wg)
-    smoothContours(Scan.T6Wg)
+ #   caclulateLimits(Scan.T6Wg)
+ #   getContours(Scan.T6Wg)
+ #   redoHistogram(Scan.T6Wg)
+ #   smoothContours(Scan.T6Wg)
 
-    caclulateLimits(Scan.T6gg)
-    getContours(Scan.T6gg)
-    redoHistogram(Scan.T6gg)
-    smoothContours(Scan.T6gg)
+#    caclulateLimits(Scan.T6gg)
+#    getContours(Scan.T6gg)
+#    redoHistogram(Scan.T6gg)
+#    smoothContours(Scan.T6gg)
 
 #    caclulateLimits(Scan.GGM)
 #    getContours(Scan.GGM)

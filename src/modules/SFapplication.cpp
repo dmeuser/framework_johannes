@@ -221,7 +221,7 @@ void plot(TString sSelection,TString sVar,int iRebin,
 
    TString saveName=sSelection+sVar;
 
-   bool divideByBinWidth=(plotMode==CR || plotMode==VR || plotMode==PRE);
+   bool divideByBinWidth=(plotMode==!CR || plotMode==!VR || plotMode==PRE);
    Rebinner rebinned(iRebin,divideByBinWidth);
    if (iRebin==0) rebinned=Rebinner(rebinEdges,rebinWidths,divideByBinWidth);
 
@@ -290,20 +290,20 @@ void plot(TString sSelection,TString sVar,int iRebin,
    st.Add(&fixHists["TTcomb"],"hist");
    le.prepend(fixHists["diboson"],cfg.datasets.getLabel("diboson"),"f");
    le.prepend(fixHists["efake"],cfg.datasets.getLabel("efake"),"f");
-   le.prepend(fixHists["TTcomb"],"t#bar{t}(+#gamma)","f");
+   le.prepend(fixHists["TTcomb"],"t#bar{t}(#gamma)","f");
 
    if (plotMode==CR) {
       // CR: more GJet
       st.Add(&hVg,"hist");
       st.Add(&hGJ,"hist");
-      le.prepend(hVg,"V(+#gamma)","f");
+      le.prepend(hVg,"V(#gamma)","f");
       le.prepend(hGJ,"#gamma+jets","f");
    } else {
       // SR,VR: more Vg
       st.Add(&hGJ,"hist");
       st.Add(&hVg,"hist");
       le.prepend(hGJ,"#gamma+jets","f");
-      le.prepend(hVg,"V(+#gamma)","f");
+      le.prepend(hVg,"V(#gamma)","f");
    }
    TH1F hStackSum(*(TH1F*)st.GetStack()->Last());
    for (TString sSample:{"TChiWG","T5Wg"}) {
@@ -311,14 +311,14 @@ void plot(TString sSelection,TString sVar,int iRebin,
       TH1F &h=fixHists[sSample+"_stacked"];
       h.Add(&hStackSum);
       h.SetLineColor(h.GetFillColor());
-      h.SetLineWidth(2);
+      h.SetLineWidth(3);
       h.SetFillStyle(0);
    }
 
    TH1F hData;
    if (showData){
       hData=rebinned(*histReader.read<TH1F>(sSelection+sVar+"/SinglePhoton"));
-      le.prepend(hData,"data","pe");
+      le.prepend(hData,"Data","pe");
    }
    TH1F hStatErr(hStackSum);
    hStatErr.SetMarkerSize(0);
@@ -537,13 +537,17 @@ void plot(TString sSelection,TString sVar,int iRebin,
          if (plotMode==PRE) {
             TH1F &hr=fixHists[sSample];
             hr.SetLineColor(hr.GetFillColor());
-            hr.SetLineWidth(2);
+            hr.SetLineWidth(3);
             hr.SetFillStyle(0);
             hr.Draw("hist same");
             hr.Draw("hist same");
             le.append(hr,sSample,"l");
          } else {
+            if (sSample == "T5Wg"){
+               h.SetLineColor(kGreen+1);
+            }
             h.Draw("hist same");
+            h.SetLineWidth(3);
             le.append(h,sSample,"l");
          }
       }
@@ -562,31 +566,32 @@ void plot(TString sSelection,TString sVar,int iRebin,
     hSystErr.Draw("same e2");
 
    std::cout << bkgIntegral.formatBlock(false,true) << std::endl;
-   
+
     le.append(hSystErr,"#sigma_{syst}","f");
    if (showData) hData.Draw("same pe1");
    spcan.pU_.RedrawAxis();
    can.RedrawAxis();
-   le.buildLegend(.55,.71,-1,-1,2).DrawClone();
+   //le.buildLegend(.55,.71,-1,-1,2).DrawClone();
+   le.buildLegend(.5,.65,-1,-1,2).DrawClone();
    if (plotMode==CR) {
-      TString txt="CR";
+      TString txt=""; //add "CR" in plot if wished
       if (sSelection.Contains("/0l")) txt+=", 0 leptons";
       if (sSelection.Contains("/1l")) txt+=", 1 lepton";
       if (sSelection.Contains("/0b")) txt+=", 0 b";
       gfx::cornerLabel(txt,1).DrawClone();
    }else if (plotMode==VR) {
-      TString txt="VR";
+      TString txt=""; // here set "VR" if you want to indicate the region
       gfx::cornerLabel(txt,1).DrawClone();
    }
    if (plotMode==PRE) {
       saver.save(can,saveName,!showData);
    } else {
       spcan.cdLow();
-      TGraphErrors grRatioStat=hist::getRatioGraph(hStatErr,st,"ratio",hist::ONLY1);
-      TH1F hRatioSyst=hist::getRatio(hSystErr,st,"ratio",hist::ONLY1);
+      TGraphErrors grRatioStat=hist::getRatioGraph(hStatErr,st,"Ratio",hist::ONLY1);
+      TH1F hRatioSyst=hist::getRatio(hSystErr,st,"Ratio",hist::ONLY1);
       TH1F hRatio;
       if (showData) {
-         hRatio=hist::getRatio(hData,st,"ratio",hist::ONLY1);
+         hRatio=hist::getRatio(hData,st,"Data/Pred.",hist::ONLY1);
          hRatio.Draw("axis e0");
          hRatio.SetMaximum(1.9);
          hRatio.SetMinimum(0.1);
@@ -610,7 +615,7 @@ void plot(TString sSelection,TString sVar,int iRebin,
       le.clear();
       le.append(grRatioStat,"#sigma_{tot}","f");
       le.append(hRatioSyst,"#sigma_{syst}","f");
-      le.buildLegend(.4,.38,-1,.55,2).DrawClone();
+      le.buildLegend(.4,.43,-1,.6,2).DrawClone();
       saver.save(spcan,saveName,!showData);
    }
 
@@ -888,19 +893,20 @@ void run()
    plot("pre_ph165/c_MET300/MT300/STgl600/","MT",{100,280,400,600,700,900},{180,120,50,100,200},VR);  
    plot("pre_ph165/c_MET300/MT300/STgl600/","absphiMETjet",{0,.4,3.2,3.4},{.2,.4,.1},VR);
    plot("pre_ph165/c_MET300/MT300/STgl600/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},VR);
-   plot("pre_ph165/c_MET300/MT300/STgl600/","absphiMETnJetPh",{0,1.8,2.6,3.3},{.3,.2,.1},VR);
+   plot("pre_ph165/c_MET300/MT300/STgl600/","absphiMETnJetPh",{0,3,3.2,3.3},{.3,0.2,.1},VR);
    plot("pre_ph165/c_MET300/MT300/STgl600/","METdotPh",{-100000,100000},{10000},VR);
    
    // preselection
 //   plot("pre_ph165/","METS_logx",1,PRE);
 
    // Signal region
-   //~ plot("pre_ph165/c_S80/MT300/","ph1Pt",5,SR_BLIND);
-   //~ plot("pre_ph165/c_S80/MT300/","MET",5,SR_BLIND);
-   //~ plot("pre_ph165/c_S80/MT300/","METS",5,SR_BLIND);
-   //~ plot("pre_ph165/c_S80/MT300/","HT",5,SR_BLIND);
-   //~ plot("pre_ph165/c_S80/MT300/","METSHT",5,SR_BLIND);
-   //~ plot("pre_ph165/c_S80/MT300/","STg",5,SR_BLIND);
+   /*
+   plot("pre_ph165/c_S80/MT300/","ph1Pt",5,SR_BLIND);
+   plot("pre_ph165/c_S80/MT300/","MET",5,SR_BLIND);
+   plot("pre_ph165/c_S80/MT300/","METS",5,SR_BLIND);
+   plot("pre_ph165/c_S80/MT300/","HT",5,SR_BLIND);
+   plot("pre_ph165/c_S80/MT300/","METSHT",5,SR_BLIND);
+   plot("pre_ph165/c_S80/MT300/","STg",5,SR_BLIND);
    plot("pre_ph165/c_MET300/MT300/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
    plot("pre_ph165/c_MET300/MT300/","STg",{480,600,800,1000,1300,1600},{120,200,200,300,300},SR);  
    plot("pre_ph165/c_MET300/MT300/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},SR);
@@ -937,6 +943,7 @@ void run()
 
    //2016 
    plot("pre_ph165/c_MET300/MT300/STg600/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
+   plot("pre_ph165/c_MET300/MT300/STg600/","absphiMETnJetPh",{0,3,3.2,3.3},{.3,0.2,.1},VR);
 //   plot("pre_ph165/c_MET300/MT300/STg600/","ph1Pt",{0,700,1500},{100,200},SR);
 //   plot("pre_ph165/c_MET300/MT300/STg600/","MET",{0,700,1500},{100,200},SR);
 //   plot("pre_ph165/c_MET300/MT300/STg600/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},SR);

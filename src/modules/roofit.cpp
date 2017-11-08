@@ -211,7 +211,7 @@ FitResult fit(TString sPresel,TString sVar,int iRebin,
       // for regular fit, use data histogram
       TH1F* hData_orig=histReader.read<TH1F>(sPresel+sVar+"/SinglePhoton");
       hData=rebinned(*hData_orig);
-      dataLabel="data";
+      dataLabel="Data";
    } else {
       // add up all MC
       hData=combHists["fixed"];
@@ -622,8 +622,10 @@ FitResult fit(TString sPresel,TString sVar,int iRebin,
    hFitTotal.SetMarkerSize(0);
    hFitTotal.SetFillColor(kWhite);
    hFitTotal.SetLineColor(kRed+1);
+   hFitTotal.GetYaxis()->SetTitleOffset(hFitTotal.GetYaxis()->GetTitleOffset()*1.1);
    hFitTotal.Draw("hist");
-   hFitTotal.SetMaximum(std::max(st.GetMaximum(),hData.GetMaximum())*1.1);
+   hFitTotal.SetMaximum(std::max(st.GetMaximum()*1.3,hData.GetMaximum())*1.3);
+   hFitTotal.SetMinimum(0.1);   
    TH1F hFitTotalErr(hFitTotal);
    TH1F white(hFitTotal);
      
@@ -659,14 +661,14 @@ FitResult fit(TString sPresel,TString sVar,int iRebin,
 
    le.clear();
    le.append(hData,dataLabel,"pe");
-   le.append(combHists[sFitSample1],sFitSample1+": "+sResult1,"l");
+   le.append(combHists[sFitSample1],"SF_{V(#gamma)}:  _{ }"+sResult1,"l");
    le.append(white,"","f");
-   le.append(combHists[sFitSample2],sFitSample2+": "+sResult2,"l");
-   le.append(combHists["fixed"],"fixed bkg","f");
-   le.append(hFitTotal,"total fit","l");
-   le.append(hFixedErr,"#sigma_{syst, fixed}","f");   
+   le.append(combHists[sFitSample2],"SF_{#gamma+jets}: "+sResult2,"l");
+   le.append(combHists["fixed"],"Fixed bkg","f");
+   le.append(hFixedErr,"#sigma_{syst, fixed}","f");  
+   le.append(hFitTotal,"Total fit","l"); 
    le.append(hFitTotalErr,"#sigma_{stat}","f");
-   TLegend leg=le.buildLegend(.36,.69,1-gPad->GetRightMargin(),-1,2);
+   TLegend leg=le.buildLegend(.32,.69,0.97-gPad->GetRightMargin(),-1,2);
    leg.Draw();
    spcan.pU_.RedrawAxis();
 
@@ -677,8 +679,14 @@ FitResult fit(TString sPresel,TString sVar,int iRebin,
       hFitTotal.SetBinError(i,TMath::Sqrt(error));
    }
    TH1F hPull=hist::getPull(hData,hFitTotal);
-   hPull.SetFillColor(kRed+1);  
+   hPull.SetFillColor(kRed+1);
+   hPull.GetYaxis()->SetTitle("#frac{Data-Fit}{#sigma_{stat}}");
+   hPull.GetYaxis()->SetTitleOffset(hFitTotal.GetYaxis()->GetTitleOffset()*0.1);
+   hPull.GetYaxis()->SetTitleSize(0.17);
    hPull.Draw("hist");
+   hPull.GetYaxis()->SetTitleOffset(hPull.GetYaxis()->GetTitleOffset()*0.1);
+   hPull.GetYaxis()->SetTitleSize(0.17);
+   hPull.Draw("hist same"); 
    if (savePlots) saver.save(spcan,saveName+"_fit",isSim);
 
    can.cd();
@@ -827,9 +835,9 @@ void resultSummary(FitResult referenceResult,SummaryMode_t summaryMode,FitMode_t
       line.SetLineColor(color2);
       line.DrawLine(referenceResult.r2,0,referenceResult.r2,1);
       ltx.SetTextColor(color1);
-      ltx.DrawLatex(referenceResult.r1,1.02,"V(+#gamma)");
+      ltx.DrawLatex(referenceResult.r1,1.02,"SF_{V(#gamma)}");
       ltx.SetTextColor(color2);
-      ltx.DrawLatex(referenceResult.r2,1.02,"(#gamma+)jets");
+      ltx.DrawLatex(referenceResult.r2,1.02,"SF_{(#gamma+)jets}");
    } else {
       if (fitMode==CLOSURE){
          fitModeLabel="Closure test";
@@ -840,9 +848,9 @@ void resultSummary(FitResult referenceResult,SummaryMode_t summaryMode,FitMode_t
       line.DrawLine(1,0,1,1);
 
       ltx.SetTextColor(color1);
-      ltx.DrawLatex(.5*(1+axRange1),1.02,"V(+#gamma)");
+      ltx.DrawLatex(.5*(1+axRange1),1.02,"SF_{V(#gamma)}");
       ltx.SetTextColor(color2);
-      ltx.DrawLatex(.5*(1+axRange2),1.02,"(#gamma+)jets");
+      ltx.DrawLatex(.5*(1+axRange2),1.02,"SF_{(#gamma+)jets}");
 
       ltx.SetTextColor(kBlack);
       ltx.SetTextAlign(11);
@@ -944,7 +952,7 @@ void resultSummary(FitResult referenceResult,SummaryMode_t summaryMode,FitMode_t
    max1=max1+(max1-min1)*.05;
    min2=min2-(max2-min2)*.05;
    max2=max2+(max2-min2)*.05;
-   TH2F h2Frame("h2Frame",TString::Format(";SF_{%s};SF_{%s}","V(+#gamma)","(#gamma+)jets"),10,min1,max1,10,min2,max2);
+   TH2F h2Frame("h2Frame",TString::Format(";SF_{%s};SF_{%s}","V(#gamma)","(#gamma+)jets"),10,min1,max1,10,min2,max2);
    h2Frame.Draw("axis");
    RooEllipse ell("",referenceResult.r1,referenceResult.r2,referenceResult.e1,referenceResult.e2,referenceResult.rho,1000);
    ell.SetFillColor(kGray);
@@ -1013,7 +1021,7 @@ void run (FitMode_t fitMode){
    TH1::SetDefaultSumw2();
    g_fitResults.clear();
    std::vector<TString> fixedBkg={"diboson","TTJets","TTGJets","efake"};
-  std::vector<std::vector<TString>> fitCombinations={{"V(+#gamma)","WGToLNuG","ZNuNuGJets","ZGTo2LG","ZNuNuJets","WLNuJets"},{"#gamma+jets","GJets_DR"}}; 
+  std::vector<std::vector<TString>> fitCombinations={{"V(#gamma)","WGToLNuG","ZNuNuGJets","ZGTo2LG","ZNuNuJets","WLNuJets"},{"#gamma+jets","GJets_DR"}}; 
 //   std::vector<std::vector<TString>> fitCombinations={{"V(+#gamma)","WGToLNuG_SUS","ZGTo2NuG","ZGTo2LG","ZNuNuJets","WLNuJets"},{"#gamma+jets","GJets_DR"}};
  //  std::vector<std::vector<TString>> fitCombinations={{"V(+#gamma)","WGToLNuG","ZNuNuGJets","ZGTo2LG","ZNuNuJets","WLNuJets"},{"(#gamma+)jets","QCD","GJets"}};
 //   std::vector<std::vector<TString>> fitCombinations={{"V(+#gamma)","WGToLNuG","ZNuNuGJets","ZGTo2LG","ZNuNuJets","WLNuJets"},{"(#gamma+)jets","GJets"}};
@@ -1088,8 +1096,7 @@ void run (FitMode_t fitMode){
  //  fit("pre_ph165/c_MET150/MT150/METl400vMTl400/","absphiMETph",{0,1,2,2.4,3.2,3.4},{1,.5,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
    fit("pre_ph165/c_MET100/MT100/METl400vMTl400/","absphiMETjet",{0,1.2,2.8,3.2,3.4},{.2,.4,.2,.1},fitCombinations,fixedBkg,fitMode);  
  //  fit("pre_ph165/c_MET100/MT100/METl400vMTl400/","absphiMETph",{0,1,2,2.4,3.2,3.4},{1,.5,.4,.2,.1},fitCombinations,fixedBkg,fitMode);
- //  fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","MET",{100,310,410},{30,100},fitCombinations,fixedBkg,fitMode);
-   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","METSHT",{0,20,50},{2,5},fitCombinations,fixedBkg,fitMode);
+   fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","MET",{100,310,410},{30,100},fitCombinations,fixedBkg,fitMode);
    fit("pre_ph165/c_MET100/MT100/METl300vMTl300/","MT"    ,{100,300,500,600},{40,20,100},fitCombinations,fixedBkg,fitMode);
 
  
@@ -1410,7 +1417,7 @@ void runClosureRange(FitMode_t fitMode, int Nrepetitions=1)
    }
    TCanvas can;
    gfx::LegendEntries le1;
-   le1.append(gr1_SFVg,"SF_{V(+#gamma)}","pe");
+   le1.append(gr1_SFVg,"SF_{V(#gamma)}","pe");
    le1.append(gr1_SFGJ,"SF_{(#gamma+)jets}","pe");
    le1.append(gr1_chi2Ndf,"SR #chi^{2}/N_{df}","p");
    gfx::LegendEntries le2;

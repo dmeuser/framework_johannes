@@ -189,7 +189,7 @@ def getMasses(point,scan):
     elif scan==Scan.T5Wg:   pattern="T5Wg_(.*)_(.*)"
     elif scan==Scan.T6gg:   pattern="T6gg_(.*)_(.*)"   
     elif scan==Scan.T6Wg:   pattern="T6Wg_(.*)_(.*)"
-    elif scan==Scan.GGM:    pattern=".*_M2_(.*)_M1_(.*)"
+    elif scan==Scan.GGM:    pattern=".*_(.*)_(.*)"
     elif scan==Scan.TChiWg: pattern="TChiWG_(.*)"
     elif scan==Scan.TChiNg: pattern="TChiNG_(.*)"
       
@@ -364,19 +364,25 @@ def plot_uncert(scan):
     h_StatB2=rt.TH2F(h_exp)
     h_StatB3=rt.TH2F(h_exp)
     h_StatB4=rt.TH2F(h_exp)
+    
     g_StatB1=rt.TGraph2D()
     g_StatB2=rt.TGraph2D()
     g_StatB3=rt.TGraph2D()
     g_StatB4=rt.TGraph2D()
 
-    g_ISRB1=rt.TGraph()
-    g_ISRB2=rt.TGraph()
-    g_ISRB3=rt.TGraph()
-    g_ISRB4=rt.TGraph()
+    g_MetB1=rt.TGraph2D()
+    g_MetB2=rt.TGraph2D()
+    g_MetB3=rt.TGraph2D()
+    g_MetB4=rt.TGraph2D()
+
+    g_ISRB1=rt.TGraph2D()
+    g_ISRB2=rt.TGraph2D()
+    g_ISRB3=rt.TGraph2D()
+    g_ISRB4=rt.TGraph2D()
     
     print points            
     for i,point in enumerate(points):
-        print point,
+        # print point,
         m2,m1=getMasses(point,scan)
         sigYield=getSignalYield(point)
         if not sigYield:
@@ -390,21 +396,27 @@ def plot_uncert(scan):
         sISR['sig']=sigYield[3]
        
         x,y=m2,m1
-        h_StatB1.SetBinContent(h_Sig.FindBin(x,y),sigYield[1][0]-1)
-        h_StatB2.SetBinContent(h_Sig.FindBin(x,y),sigYield[1][1]-1)
-        h_StatB3.SetBinContent(h_Sig.FindBin(x,y),sigYield[1][2]-1)
-        h_StatB4.SetBinContent(h_Sig.FindBin(x,y),sigYield[1][3]-1)
+        if scan==Scan.GGM: x,y=m1,m2 # ggm display is transposed
+        h_StatB1.SetBinContent(h_Sig.FindBin(x,y),100*(sigYield[1][0]-1))
+        h_StatB2.SetBinContent(h_Sig.FindBin(x,y),100*(sigYield[1][1]-1))
+        h_StatB3.SetBinContent(h_Sig.FindBin(x,y),100*(sigYield[1][2]-1))
+        h_StatB4.SetBinContent(h_Sig.FindBin(x,y),100*(sigYield[1][3]-1))
 
-        g_StatB1.SetPoint(i,x,y,sigYield[1][0]-1)
-        g_StatB2.SetPoint(i,x,y,sigYield[1][1]-1)
-        g_StatB3.SetPoint(i,x,y,sigYield[1][2]-1)
-        g_StatB4.SetPoint(i,x,y,sigYield[1][3]-1)
+        g_StatB1.SetPoint(i,x,y,100*(sigYield[1][0]-1))
+        g_StatB2.SetPoint(i,x,y,100*(sigYield[1][1]-1))
+        g_StatB3.SetPoint(i,x,y,100*(sigYield[1][2]-1))
+        g_StatB4.SetPoint(i,x,y,100*(sigYield[1][3]-1))
 
-        if (scan == Scan.TChiWg):
-           g_ISRB1.SetPoint(i,x,sigYield[3][0]-1)
-           g_ISRB2.SetPoint(i,x,sigYield[3][1]-1)
-           g_ISRB3.SetPoint(i,x,sigYield[3][2]-1)
-           g_ISRB4.SetPoint(i,x,sigYield[3][3]-1)
+        g_MetB1.SetPoint(i,x,y,100*(sigYield[2][0]-1))
+        g_MetB2.SetPoint(i,x,y,100*(sigYield[2][1]-1))
+        g_MetB3.SetPoint(i,x,y,100*(sigYield[2][2]-1))
+        g_MetB4.SetPoint(i,x,y,100*(sigYield[2][3]-1))       
+
+        if (scan == Scan.TChiWg or scan==Scan.TChiNg):
+           g_ISRB1.SetPoint(i,x,y,100*(sigYield[3][0]-1))
+           g_ISRB2.SetPoint(i,x,y,100*(sigYield[3][1]-1))
+           g_ISRB3.SetPoint(i,x,y,100*(sigYield[3][2]-1))
+           g_ISRB4.SetPoint(i,x,y,100*(sigYield[3][3]-1))
 
     f=rt.TFile(outdir+"uncert_%s.root"%sScan,"update")
     g_StatB1.Write("g_"+"statB1",rt.TObject.kOverwrite)
@@ -412,7 +424,13 @@ def plot_uncert(scan):
     g_StatB3.Write("g_"+"statB3",rt.TObject.kOverwrite)
     g_StatB4.Write("g_"+"statB4",rt.TObject.kOverwrite)
 
-    if (scan==Scan.TChiWg):
+    g_MetB1.Write("g_"+"MetB1",rt.TObject.kOverwrite)
+    g_MetB2.Write("g_"+"MetB2",rt.TObject.kOverwrite)
+    g_MetB3.Write("g_"+"MetB3",rt.TObject.kOverwrite)
+    g_MetB4.Write("g_"+"MetB4",rt.TObject.kOverwrite)
+    
+
+    if (scan==Scan.TChiWg or scan==Scan.TChiNg):
        g_ISRB1.Write("g_"+"ISRB1",rt.TObject.kOverwrite)
        g_ISRB2.Write("g_"+"ISRB2",rt.TObject.kOverwrite)
        g_ISRB3.Write("g_"+"ISRB3",rt.TObject.kOverwrite)
@@ -426,11 +444,41 @@ def redoHistogram(scan):
     elif scan==Scan.T5Wg: sScan="T5Wg"
     elif scan==Scan.T6Wg: sScan="T6Wg"
     elif scan==Scan.T6gg: sScan="T6gg"
+    elif scan==Scan.GGM: sScan="GGM"
+
+    if (scan == Scan.T5gg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{g}#tilde{g}, #tilde{g} #rightarrow qq%s, %s #rightarrow #gamma#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.T5Wg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{g}#tilde{g}, #tilde{g} #rightarrow qq%s, %s #rightarrow #gamma/W^{#pm}#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.T6gg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{q}#tilde{q}, #tilde{q} #rightarrow q%s, %s #rightarrow #gamma#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.T6Wg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{q}#tilde{q}, #tilde{q} #rightarrow q%s, %s #rightarrow #gamma/W^{#pm}#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.GGM):
+        lsp_s = ""
+        label= "GGM"
+        sParticle = "m_{#tilde{B}} (GeV)"
+        LSP = "m_{#tilde{W}} (GeV)"
+        
 
     f=rt.TFile(outdir+"limits_%s.root"%sScan,"update")
     gr=f.Get("gr_significance")
     h=gr.GetHistogram()
     h.GetZaxis().SetRangeUser(-3,3)
+    h.GetXaxis().SetTitle(sParticle)
+    h.GetYaxis().SetTitle(LSP) 
     for xbin in range(1,h.GetNbinsX()+1):
         for ybin in range(1,h.GetNbinsY()+1):
            if (h.GetBinContent(xbin,ybin) == 0):
@@ -444,40 +492,247 @@ def redoHistogramStat(scan):
     elif scan==Scan.T5Wg: sScan="T5Wg"
     elif scan==Scan.T6Wg: sScan="T6Wg"
     elif scan==Scan.T6gg: sScan="T6gg"
+    elif scan==Scan.GGM: sScan="GGM"
+
+    if (scan == Scan.T5gg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{g}#tilde{g}, #tilde{g} #rightarrow qq%s, %s #rightarrow #gamma#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.T5Wg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{g}#tilde{g}, #tilde{g} #rightarrow qq%s, %s #rightarrow #gamma/W^{#pm}#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.T6gg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{q}#tilde{q}, #tilde{q} #rightarrow q%s, %s #rightarrow #gamma#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.T6Wg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{q}#tilde{q}, #tilde{q} #rightarrow q%s, %s #rightarrow #gamma/W^{#pm}#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.GGM):
+        lsp_s = ""
+        label= "GGM"
+        sParticle = "m_{#tilde{B}} (GeV)"
+        LSP = "m_{#tilde{W}} (GeV)"
 
     f=rt.TFile(outdir+"uncert_%s.root"%sScan,"update")
     gr=f.Get("g_statB1")
     h=gr.GetHistogram()
-    h.GetZaxis().SetRangeUser(0,0.5)
+    h.SetTitle(sScan+" stat. uncertainty in bin1")
+    rt.gStyle.SetPadRightMargin(0.15)
+    rt.gStyle.SetPadBottomMargin(0.15)
+    rt.gStyle.SetPadLeftMargin(0.15)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.GetXaxis().SetTitleOffset(1.3)
+    h.GetYaxis().SetTitleOffset(1.3)
+    h.GetXaxis().SetTitleSize(1.5*h.GetXaxis().GetTitleSize())
+    h.GetYaxis().SetTitleSize(1.5*h.GetYaxis().GetTitleSize())
+    h.GetXaxis().SetTitle(sParticle)
+    h.GetYaxis().SetTitle(LSP) 
     for xbin in range(1,h.GetNbinsX()+1):
         for ybin in range(1,h.GetNbinsY()+1):
            if (h.GetBinContent(xbin,ybin) == 0):
               h.SetBinContent(xbin,ybin,-5)
+    c = rt.TCanvas()
+    h.Draw("colz")
+    rt.gPad.SaveAs(sScan+"_stat_B1.pdf")
     h.Write("g_StatB1_redone",rt.TObject.kOverwrite)
     gr=f.Get("g_statB2")
     h=gr.GetHistogram()
-    h.GetZaxis().SetRangeUser(0,0.5)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.SetTitle(sScan+" stat. uncertainty in bin2")
+    rt.gStyle.SetPadRightMargin(0.15)
+    rt.gStyle.SetPadBottomMargin(0.15)
+    rt.gStyle.SetPadLeftMargin(0.15)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.GetXaxis().SetTitleOffset(1.3)
+    h.GetYaxis().SetTitleOffset(1.3)
+    h.GetXaxis().SetTitleSize(1.5*h.GetXaxis().GetTitleSize())
+    h.GetYaxis().SetTitleSize(1.5*h.GetYaxis().GetTitleSize())
+    h.GetXaxis().SetTitle(sParticle)
+    h.GetYaxis().SetTitle(LSP)
     for xbin in range(1,h.GetNbinsX()+1):
         for ybin in range(1,h.GetNbinsY()+1):
            if (h.GetBinContent(xbin,ybin) == 0):
               h.SetBinContent(xbin,ybin,-5)
+    c = rt.TCanvas()
+    h.Draw("colz")
+    rt.gPad.SaveAs(sScan+"_stat_B2.pdf")
     h.Write("g_StatB2_redone",rt.TObject.kOverwrite)
     gr=f.Get("g_statB3")
     h=gr.GetHistogram()
-    h.GetZaxis().SetRangeUser(0,0.5)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.SetTitle(sScan+" stat. uncertainty in bin3")
+    rt.gStyle.SetPadRightMargin(0.15)
+    rt.gStyle.SetPadBottomMargin(0.15)
+    rt.gStyle.SetPadLeftMargin(0.15)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.GetXaxis().SetTitleOffset(1.3)
+    h.GetYaxis().SetTitleOffset(1.3)
+    h.GetXaxis().SetTitleSize(1.5*h.GetXaxis().GetTitleSize())
+    h.GetYaxis().SetTitleSize(1.5*h.GetYaxis().GetTitleSize())
+    h.GetXaxis().SetTitle(sParticle)
+    h.GetYaxis().SetTitle(LSP)
     for xbin in range(1,h.GetNbinsX()+1):
         for ybin in range(1,h.GetNbinsY()+1):
            if (h.GetBinContent(xbin,ybin) == 0):
               h.SetBinContent(xbin,ybin,-5)
+    c = rt.TCanvas()
+    h.Draw("colz")
+    rt.gPad.SaveAs(sScan+"_stat_B3.pdf")
     h.Write("g_StatB3_redone",rt.TObject.kOverwrite)
     gr=f.Get("g_statB4")
     h=gr.GetHistogram()
-    h.GetZaxis().SetRangeUser(0,0.5)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.SetTitle(sScan+" stat. uncertainty in bin4")
+    rt.gStyle.SetPadRightMargin(0.15)
+    rt.gStyle.SetPadBottomMargin(0.15)
+    rt.gStyle.SetPadLeftMargin(0.15)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.GetXaxis().SetTitleOffset(1.3)
+    h.GetYaxis().SetTitleOffset(1.3)
+    h.GetXaxis().SetTitleSize(1.5*h.GetXaxis().GetTitleSize())
+    h.GetYaxis().SetTitleSize(1.5*h.GetYaxis().GetTitleSize())
+    h.GetXaxis().SetTitle(sParticle)
+    h.GetYaxis().SetTitle(LSP)
     for xbin in range(1,h.GetNbinsX()+1):
         for ybin in range(1,h.GetNbinsY()+1):
            if (h.GetBinContent(xbin,ybin) == 0):
               h.SetBinContent(xbin,ybin,-5)
+    c = rt.TCanvas()
+    h.Draw("colz")
+    rt.gPad.SaveAs(sScan+"_stat_B4.pdf")
     h.Write("g_StatB4_redone",rt.TObject.kOverwrite)
+    f.Close()
+
+def redoHistogramMet(scan):
+    sScan="unkown_scan"
+    if scan==Scan.T5gg: sScan="T5gg"
+    elif scan==Scan.T5Wg: sScan="T5Wg"
+    elif scan==Scan.T6Wg: sScan="T6Wg"
+    elif scan==Scan.T6gg: sScan="T6gg"
+    elif scan==Scan.GGM: sScan="GGM"
+
+    if (scan == Scan.T5gg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{g}#tilde{g}, #tilde{g} #rightarrow qq%s, %s #rightarrow #gamma#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.T5Wg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{g}#tilde{g}, #tilde{g} #rightarrow qq%s, %s #rightarrow #gamma/W^{#pm}#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.T6gg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{q}#tilde{q}, #tilde{q} #rightarrow q%s, %s #rightarrow #gamma#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.T6Wg):
+        lsp_s = "#lower[-0.12]{#tilde{#chi}}#lower[0.2]{#scale[0.85]{^{0}}}#kern[-1.3]{#scale[0.85]{_{1}}}"
+        label= "pp #rightarrow #tilde{q}#tilde{q}, #tilde{q} #rightarrow q%s, %s #rightarrow #gamma/W^{#pm}#tilde{G}"%(lsp_s,lsp_s)
+        sParticle = "m#kern[0.1]{_{#lower[-0.12]{#tilde{q}}}} (GeV)"
+        LSP = "m#kern[0.1]{_{"+lsp_s+"}} (GeV)"
+    if (scan == Scan.GGM):
+        lsp_s = ""
+        label= "GGM"
+        sParticle = "m_{#tilde{B}} (GeV)"
+        LSP = "m_{#tilde{W}} (GeV)"
+
+    f=rt.TFile(outdir+"uncert_%s.root"%sScan,"update")
+    gr=f.Get("g_MetB1")
+    h=gr.GetHistogram()
+    h.GetZaxis().SetRangeUser(0,20)
+    h.SetTitle(sScan+" FastSim p_{T}^{miss} uncertainty in bin2")
+    rt.gStyle.SetPadRightMargin(0.15)
+    rt.gStyle.SetPadBottomMargin(0.15)
+    rt.gStyle.SetPadLeftMargin(0.15)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.GetXaxis().SetTitleOffset(1.3)
+    h.GetYaxis().SetTitleOffset(1.3)
+    h.GetXaxis().SetTitleSize(1.5*h.GetXaxis().GetTitleSize())
+    h.GetYaxis().SetTitleSize(1.5*h.GetYaxis().GetTitleSize())
+    h.GetXaxis().SetTitle(sParticle)
+    h.GetYaxis().SetTitle(LSP)
+    for xbin in range(1,h.GetNbinsX()+1):
+        for ybin in range(1,h.GetNbinsY()+1):
+           if (h.GetBinContent(xbin,ybin) == 0):
+              h.SetBinContent(xbin,ybin,-5)
+    c = rt.TCanvas()
+    h.Draw("colz")
+    rt.gPad.SaveAs(sScan+"_met_B1.pdf")
+    h.Write("g_MetB1_redone",rt.TObject.kOverwrite)
+    gr=f.Get("g_MetB2")
+    h=gr.GetHistogram()
+    h.GetZaxis().SetRangeUser(0,20)
+    h.SetTitle(sScan+" FastSim p_{T}^{miss} uncertainty in bin1")
+    rt.gStyle.SetPadRightMargin(0.15)
+    rt.gStyle.SetPadBottomMargin(0.15)
+    rt.gStyle.SetPadLeftMargin(0.15)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.GetXaxis().SetTitleOffset(1.3)
+    h.GetYaxis().SetTitleOffset(1.3)
+    h.GetXaxis().SetTitleSize(1.5*h.GetXaxis().GetTitleSize())
+    h.GetYaxis().SetTitleSize(1.5*h.GetYaxis().GetTitleSize())
+    h.GetXaxis().SetTitle(sParticle)
+    h.GetYaxis().SetTitle(LSP)
+    for xbin in range(1,h.GetNbinsX()+1):
+        for ybin in range(1,h.GetNbinsY()+1):
+           if (h.GetBinContent(xbin,ybin) == 0):
+              h.SetBinContent(xbin,ybin,-5)
+    c = rt.TCanvas()
+    h.Draw("colz")
+    rt.gPad.SaveAs(sScan+"_met_B2.pdf")
+    h.Write("g_MetB2_redone",rt.TObject.kOverwrite)
+    gr=f.Get("g_MetB3")
+    h=gr.GetHistogram()
+    h.GetZaxis().SetRangeUser(0,20)
+    h.SetTitle(sScan+" FastSim p_{T}^{miss} uncertainty in bin3")
+    rt.gStyle.SetPadRightMargin(0.15)
+    rt.gStyle.SetPadBottomMargin(0.15)
+    rt.gStyle.SetPadLeftMargin(0.15)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.GetXaxis().SetTitleOffset(1.3)
+    h.GetYaxis().SetTitleOffset(1.3)
+    h.GetXaxis().SetTitleSize(1.5*h.GetXaxis().GetTitleSize())
+    h.GetYaxis().SetTitleSize(1.5*h.GetYaxis().GetTitleSize())
+    h.GetXaxis().SetTitle(sParticle)
+    h.GetYaxis().SetTitle(LSP)
+    for xbin in range(1,h.GetNbinsX()+1):
+        for ybin in range(1,h.GetNbinsY()+1):
+           if (h.GetBinContent(xbin,ybin) == 0):
+              h.SetBinContent(xbin,ybin,-5)
+    c = rt.TCanvas()
+    h.Draw("colz")
+    rt.gPad.SaveAs(sScan+"_met_B3.pdf")
+    h.Write("g_MetB3_redone",rt.TObject.kOverwrite)
+    gr=f.Get("g_MetB4")
+    h=gr.GetHistogram()
+    h.GetZaxis().SetRangeUser(0,20)
+    h.SetTitle(sScan+" FastSim p_{T}^{miss} uncertainty in bin4")
+    rt.gStyle.SetPadRightMargin(0.15)
+    rt.gStyle.SetPadBottomMargin(0.15)
+    rt.gStyle.SetPadLeftMargin(0.15)
+    h.GetZaxis().SetRangeUser(0,50)
+    h.GetXaxis().SetTitleOffset(1.3)
+    h.GetYaxis().SetTitleOffset(1.3)
+    h.GetXaxis().SetTitleSize(1.5*h.GetXaxis().GetTitleSize())
+    h.GetYaxis().SetTitleSize(1.5*h.GetYaxis().GetTitleSize())
+    h.GetXaxis().SetTitle(sParticle)
+    h.GetYaxis().SetTitle(LSP)
+    for xbin in range(1,h.GetNbinsX()+1):
+        for ybin in range(1,h.GetNbinsY()+1):
+           if (h.GetBinContent(xbin,ybin) == 0):
+              h.SetBinContent(xbin,ybin,-5)
+    c = rt.TCanvas()
+    h.Draw("colz")
+    rt.gPad.SaveAs(sScan+"_met_B4.pdf")
+    h.Write("g_MetB4_redone",rt.TObject.kOverwrite)
     f.Close()
 
 if __name__ == '__main__':
@@ -486,32 +741,34 @@ if __name__ == '__main__':
     signal_scan="signal_scan_v19.root"
     rho=-0.0
     
-    plot_uncert(Scan.TChiWg)
+#    plot_uncert(Scan.TChiWg)
     
-#    plot_uncert(Scan.TChiNg)
+    plot_uncert(Scan.TChiNg)
     
  #   plot_uncert(Scan.T5gg)
  #   redoHistogram(Scan.T5gg)
- #   redoHistogramStat(Scan.T5gg)
-    
- #   caclulateLimits(Scan.T5Wg)
- #   getContours(Scan.T5Wg)
+   # redoHistogramStat(Scan.T5gg)
+ #   redoHistogramMet(Scan.T5gg)
+
+ #   plot_uncert(Scan.T5Wg)
  #   redoHistogram(Scan.T5Wg)
- #   smoothContours(Scan.T5Wg)
+  #  redoHistogramStat(Scan.T5Wg)
+ #   redoHistogramMet(Scan.T5Wg)
 
-#    caclulateLimits(Scan.T6Wg)
-  #  getContours(Scan.T6Wg)
-  #  redoHistogram(Scan.T6Wg)
-  #  smoothContours(Scan.T6Wg)
+  #  plot_uncert(Scan.T6gg)
+ #   redoHistogram(Scan.T6gg)
+  #  redoHistogramStat(Scan.T6gg)
+  #  redoHistogramMet(Scan.T6gg)
 
-  #  caclulateLimits(Scan.T6gg)
-  #  getContours(Scan.T6gg)
-  #  redoHistogram(Scan.T6gg)
-  #  smoothContours(Scan.T6gg)
+  #  plot_uncert(Scan.T6Wg)
+ #   redoHistogram(Scan.T6Wg)
+ #   redoHistogramStat(Scan.T6Wg)
+  #  redoHistogramMet(Scan.T6Wg)
 
-#    caclulateLimits(Scan.GGM)
-#    getContours(Scan.GGM)
-#    smoothContours(Scan.GGM)
-
+ #   plot_uncert(Scan.GGM)
+ #   redoHistogram(Scan.GGM)
+ #   redoHistogramStat(Scan.GGM)
+ #   redoHistogramMet(Scan.GGM)
+#
 
 

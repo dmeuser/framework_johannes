@@ -57,7 +57,6 @@ Datasubset::Datasubset(std::string filename,float xsec,TString dataBasePath,std:
 
    TFile f(dataBasePath+filename);
    if (!f.IsZombie()){
-      //TH1F*  h=(TH1F*)f.Get("TreeWriter/hCutFlowTChiNG_800");
       TH1F*  h=(TH1F*)f.Get("TreeWriter/hCutFlow");
       TTree* t=(TTree*)f.Get("TreeWriter/eventTree");
       if (!h || !t) {

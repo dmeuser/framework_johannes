@@ -16,6 +16,7 @@
 #include <regex>
 
 Config const &cfg=Config::get();
+io::Logger fit_result_weights(("PU_uncert.tex"));
 
 enum Scan_t
 {
@@ -27,6 +28,7 @@ enum Scan_t
    T6Wg,
    T6gg,  
 };
+
 
 std::map<int,float> getXsecs(Scan_t scan)
 {
@@ -74,9 +76,10 @@ std::string getModelName(Scan_t scan, UShort_t signal_m1, UShort_t signal_m2 = 0
    else if (scan==T5gg)  modelName = "T5gg_";
    else if (scan==T6Wg)  modelName = "T6Wg_";
    else if (scan==T6gg)  modelName = "T6gg_";
+   else if (scan==GGM)  modelName = "GGM_";   
    if (signal_m1) modelName += std::to_string(signal_m1);
-   if (signal_m2) modelName += "_" + std::to_string(signal_m2);   
-   
+   if (signal_m2) modelName += "_" + std::to_string(signal_m2);
+  
    return modelName;
 }
 
@@ -85,7 +88,8 @@ std::pair<int,int> getMasses(std::string fileName,Scan_t scan)
 {
    std::smatch m;
    std::regex e;
-   if (scan==GGM)  e=".*_M2_(.*)_M1_(.*)\\.root";
+  // if (scan==GGM)  e=".*_M2_(.*)_M1_(.*)\\.root";
+   if (scan==GGM)  e=".*_(.*)_(.*)";
    else if (scan==TChiWg)  e="TChiWG_(.*)";
    else if (scan==TChiNg)  e="TChiNG_(.*)";
    else if (scan==T5Wg) e="T5.*_(.*)_(.*)";
@@ -99,6 +103,7 @@ std::pair<int,int> getMasses(std::string fileName,Scan_t scan)
       // io::log*m[1]>>m[2];
       return std::make_pair(std::stoi(m[1]),0);
    }
+
    assert(m.size()==3);
    // io::log*m[1]>>m[2];
    return std::make_pair(std::stoi(m[1]),std::stoi(m[2]));
@@ -109,11 +114,12 @@ void runScan_80X(Scan_t scan)
    std::map<int,float> mXsecs=getXsecs(scan);
    TString fname=cfg.dataBasePath;
    if (scan==TChiWg) fname+="SMS-TChiWG.root";
-   else if (scan==TChiNg) fname+="SMS-TChiNG.root";  
+   else if (scan==TChiNg) fname+="SMS-TChiNG_BF50N50G.root";  
    else if (scan==T5Wg) fname+="SMS-T5Wg.root";
    else if (scan==T5gg) fname+="SMS-T5gg.root";
    else if (scan==T6Wg) fname+="SMS-T6Wg.root";
    else if (scan==T6gg) fname+="SMS-T6gg.root";
+   else if (scan==GGM) fname+="GGM.root";
    else debug<<"unsupported scan!";
    std::map<std::string,TH1F> hSR;
    std::map<std::string,TH1F> hCR;
@@ -139,7 +145,6 @@ void runScan_80X(Scan_t scan)
    Int_t nGoodVertices = 0; 
    tree::MET *MET=0;
    tree::MET *genMET=0;
-
    TTree *tree=(TTree*)file.Get(cfg.treeName);
    tree->SetBranchAddress("pu_weight", &w_pu);
    tree->SetBranchAddress("mc_weight", &w_mc);
@@ -166,6 +171,7 @@ void runScan_80X(Scan_t scan)
       if (iEvent%(iEvents/100)==0) {io::log*"."; io::log.flush(); };
       tree->GetEvent(iEvent);
       model = getModelName(scan, signal_m1, signal_m2);
+      
  //              debug << ".......................hier";
  /*
       if (scan==T5Xg) {
@@ -207,7 +213,6 @@ void runScan_80X(Scan_t scan)
          PVlowSR[model]=0;              
          PVhighSR[model]=0;
       }
-      
       float fEventWeight=w_pu * w_mc;
       float fEventWeightError = fEventWeight;
 
@@ -258,7 +263,6 @@ void runScan_80X(Scan_t scan)
          PVhighAll[model]++;
       }
       
-
       std::vector<tree::Photon const *> lPho,mPho,tPho,lPixPho;
       for (tree::Photon const &ph: *photons){
          if (ph.sigmaIetaIeta<0.001 || ph.sigmaIphiIphi<0.001) continue;
@@ -309,6 +313,7 @@ void runScan_80X(Scan_t scan)
          for (tree::Particle const &gj: *genJets) {
             if (j.p.DeltaR(gj.p) < 0.3) matched=true;
          }
+       
          if (!matched) {
             vetoEvent=true;
             break;
@@ -366,16 +371,21 @@ void runScan_80X(Scan_t scan)
          if (std::abs(dPhi) < std::abs(dPhiMETnearJetPh))
             dPhiMETnearJetPh=dPhi;
       }
-      
       hPresel[model].Fill(dPhiMETnearJetPh,fEventWeight);
-      hPresel[model+"_mu2"].Fill(dPhiMETnearJetPh,fEventWeight*w_pdf->at(4));
-      hPresel[model+"_mu05"].Fill(dPhiMETnearJetPh,fEventWeight*w_pdf->at(8));
+      if (scan == GGM){
+         hPresel[model+"_mu2"].Fill(dPhiMETnearJetPh,fEventWeight);
+         hPresel[model+"_mu05"].Fill(dPhiMETnearJetPh,fEventWeight);
+      } else {
+         hPresel[model+"_mu2"].Fill(dPhiMETnearJetPh,fEventWeight*w_pdf->at(4));
+         hPresel[model+"_mu05"].Fill(dPhiMETnearJetPh,fEventWeight*w_pdf->at(8));
+      }
       
       if (MET->p.Pt()>100 && MT>100) {
          if (MET->p.Pt()<300 || MT<300) {
             hCR[model].Fill(dPhiMETnearJetPh,fEventWeight);
          }
       }
+      
       //adjust genMET study for MET uncertainty -> selection with gen met
       if (MET->p.Pt()>300 && MT>300 && STg>600) {
          miAcc[model]++;
@@ -391,16 +401,23 @@ void runScan_80X(Scan_t scan)
          hSR[model].Fill(STg,fEventWeight);
          hSR[model+"SRErrISR"].Fill(STg,fEventWeightError);
          hSR[model+"_gen"].Fill(genSTg,fEventWeight);
-         hSR[model+"_mu2"].Fill(STg,fEventWeight*w_pdf->at(4));
-         hSR[model+"_mu05"].Fill(STg,fEventWeight*w_pdf->at(8));
+         if (scan == GGM){
+            hSR[model+"_mu2"].Fill(STg,fEventWeight);
+            hSR[model+"_mu05"].Fill(STg,fEventWeight);            
+         } else {
+            hSR[model+"_mu2"].Fill(STg,fEventWeight*w_pdf->at(4));
+            hSR[model+"_mu05"].Fill(STg,fEventWeight*w_pdf->at(8));
+         }
 
       }
       else {
       hISRWeight[model+"_after"].Fill(-1,fEventWeight);
       hISRWeight[model+"_afterErr"].Fill(-1,fEventWeightError);
       }
+
       
    } // evt loop
+   model = getModelName(scan, 640, 630);
    io::log<<"";
    io::log*"vetoed "*iFastSimVeto*"/"*iBeforeVeto>>"events";
 
@@ -408,17 +425,7 @@ void runScan_80X(Scan_t scan)
   // io::log*"rel. acceptance low PV set "*PVlowSR*"/"*PVlowAll>>"";  
    io::log<<"";
  //  io::log*"rel. acceptance high PV set "*PVhighSR*"/"*PVhighAll>>"";
-
-   for (auto &it: PVlowSR) std::cout << it.first << " : " << ((1.*it.second/PVlowAll[it.first]) - (1.*PVhighSR[it.first]/PVhighAll[it.first]))*100/2. << std::endl; //balanced deviation because of PU in percent
-
-    
-   io::RootFileReader dataReader(TString::Format("histograms_%s.root",cfg.treeVersion.Data()),TString::Format("distributions%.1f",cfg.processFraction*100));
-   TH1F hData(*dataReader.read<TH1F>("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/SinglePhoton"));
-   float const nData=hData.Integral();
-
-   std::map<TString,TGraph2D> grAcc;
-   std::map<TString,TGraph2D> grScaleUnc;
-   std::map<TString,TGraph2D> grCont;
+ 
    TString sScan="unkown_scan";
    if (scan==GGM)  sScan="GGM";
    else if (scan==TChiWg) sScan="TChiWg";
@@ -427,6 +434,26 @@ void runScan_80X(Scan_t scan)
    else if (scan==T5gg) sScan="T5gg";
    else if (scan==T6Wg) sScan="T6Wg";
    else if (scan==T6gg) sScan="T6gg";
+
+ //  for (auto &it: PVlowSR) std::cout << it.first << " : " << ((1.*it.second/PVlowAll[it.first]) - (1.*PVhighSR[it.first]/PVhighAll[it.first]))*100/2. << std::endl; //balanced deviation because of PU in percent
+
+   TString fill_line;
+
+   double uncert_PU = 0.;
+   for (auto &it: PVlowSR) {
+      uncert_PU = fabs(((1.*it.second/PVlowAll[it.first]) - (1.*PVhighSR[it.first]/PVhighAll[it.first]))*100/2.);
+      fill_line = it.first +" : " + std::to_string(uncert_PU);
+      fit_result_weights<< fill_line;
+   }
+    
+   io::RootFileReader dataReader(TString::Format("histograms_%s.root",cfg.treeVersion.Data()),TString::Format("distributions%.1f",cfg.processFraction*100));
+   TH1F hData(*dataReader.read<TH1F>("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/SinglePhoton"));
+   float const nData=hData.Integral();
+
+   std::map<TString,TGraph2D> grAcc;
+   std::map<TString,TGraph2D> grScaleUnc;
+   std::map<TString,TGraph2D> grCont;
+
 
    io::RootFileSaver saver_hist(TString::Format("signal_scan_%s.root",cfg.treeVersion.Data()),"",false);
    TString sVar;
@@ -444,6 +471,9 @@ void runScan_80X(Scan_t scan)
       } else if (model.find("T6gg")!=std::string::npos) {
          hcf=(TH1F*)file.Get(("TreeWriter/hCutFlowT6Wg"+model.substr(model.find('_'))).c_str());
          sScan="T6gg";
+      } else if (model.find("GGM")!=std::string::npos) {
+         hcf=(TH1F*)file.Get(("TreeWriter/hCutFlowGMSB"+model.substr(model.find('_'))).c_str());
+         sScan="GGM";         
       } else {
          hcf=(TH1F*)file.Get(("TreeWriter/hCutFlow"+model).c_str());
          if (scan==T5Wg) sScan="T5Wg";
@@ -451,16 +481,17 @@ void runScan_80X(Scan_t scan)
       }
       assert(hcf);
       float Ngen=hcf->GetBinContent(2);
-      if (scan==T5Wg) {
+      std::cout << model << std::endl;
+ //     if (scan==T5Wg) {  //after discussion with conveners we need to assume 50% to W and 50% to gamma, so that we need the full scan
          // consider that gg, gW, and WW events were generated
-         //Ngen/=2.0;
-      }
-      else if (scan==T5gg) {
+  //       Ngen/=2.0;
+ //     }
+      if (scan==T5gg) {
          Ngen/=4.0;
       }
-      else if (scan==T6Wg) {
-         //Ngen/=2.0;
-      }
+    //  else if (scan==T6Wg) {
+   //      Ngen/=2.0;
+   //   }
       else if (scan==T6gg) {
          Ngen/=4.0;
       }
@@ -478,13 +509,22 @@ void runScan_80X(Scan_t scan)
       hSR[model].Scale(ISR_norm); //scale after scaleUnc determination because otherwise Eventweights don't cancel
       hSR[model+"SRErrISR"].Scale(ISR_norm);   
       hSR[model+"_gen"].Scale(ISR_norm);
-      hCR[model].Scale(ISR_norm);  
+      hCR[model].Scale(ISR_norm);
 
       std::pair<int,int> const masses=getMasses(model,scan);
-      int const m=masses.first;
-      float const xs=mXsecs[m];
+      int m ;
+      float xs;
+      
+      if (scan == GGM){
+         m=masses.first*100000 + masses.second;
+         xs=mXsecs[m];
+      }
+      else {
+         m=masses.first;
+         xs=mXsecs[m];
+      }
       float const w=xs/Ngen*cfg.lumi;
-         
+
       hSR[model].Scale(w);
       hSR[model+"SRErrISR"].Scale(w);      
       hSR[model+"_gen"].Scale(w);
@@ -515,15 +555,22 @@ void runScan_80X(Scan_t scan)
       saver_hist.save(hISRWeight[model+"_afterErr"],sVar+"/"+model+"_afterErr");
 
       // acceptance
-      float const x=masses.first;
-      float const y=masses.second;
+      float x,y;
+      if (scan == GGM) {
+         x=masses.second;
+         y=masses.first;
+      }
+      else {      
+         x=masses.first;
+         y=masses.second;
+      }
       grAcc[sScan].SetPoint(grAcc[sScan].GetN(),x,y,float(miAcc[model])/Ngen);
       grScaleUnc[sScan].SetPoint(grScaleUnc[sScan].GetN(),x,y,scaleUnc);
 
       // contamination
       hCR[model].Scale(1./nData);
       sVar="pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh";
-      saver_hist.save(hCR[model],sVar+"/"+model);
+   //   saver_hist.save(hCR[model],sVar+"/"+model);
       grCont[sScan].SetPoint(grCont[sScan].GetN(),x,y,hCR[model].Integral());
    }
    file.Close();
@@ -541,10 +588,11 @@ void runScan_80X(Scan_t scan)
 extern "C"
 void run()
 {
-    //runScan_80X(TChiWg);
-    //runScan_80X(TChiNg);
-    runScan_80X(T5Wg);
-    //runScan_80X(T5gg);
-    //runScan_80X(T6Wg);
-    //runScan_80X(T6gg);  
+ //   runScan_80X(TChiWg);
+ //   runScan_80X(TChiNg);
+//    runScan_80X(T5Wg);
+ //   runScan_80X(T5gg);
+ //   runScan_80X(T6Wg);
+ //   runScan_80X(T6gg);
+  runScan_80X(GGM);
 }
