@@ -30,7 +30,7 @@ void saveHistograms(std::map<TString,std::vector<TString>> const &msPresel_vVars
          // hEFake.SetFillStyle(1001);
          saver_hist.save(hEFake,sVar+"/efake");
          if (saveData) saver_hist.save(*hs.getHistogram(sVar,"SinglePhoton"),sVar+"/SinglePhoton");
-         if (saveData) saver_hist.save(*hs.getHistogram(sVar,"MET"),sVar+"/MET");        
+         //if (saveData) saver_hist.save(*hs.getHistogram(sVar,"MET"),sVar+"/MET");        
       }
    }
 }
@@ -1393,7 +1393,8 @@ void run()
    // calling the "normal" histogram "hs" from here, since it's the most used
    hist::Histograms<TH1F> &hs = hs_notPix;
 //   std::vector<TString> samplesToCombine={"GJets","QCD","ZNuNuGJets","ZGTo2LG","WGToLNuG","ZNuNuJets","WLNuJets","diboson","T5gg","T5Wg","GGM","SinglePhoton","MET"};
-   std::vector<TString> samplesToCombine={"GJets_DR","QCD","ZNuNuGJets","ZGTo2LG","WGToLNuG","ZNuNuJets","WLNuJets","diboson","T5Wg","TChiWG","SinglePhoton","MET"};
+   //std::vector<TString> samplesToCombine={"GJets_DR","QCD","ZNuNuGJets","ZGTo2LG","WGToLNuG","ZNuNuJets","WLNuJets","diboson","T5Wg","TChiWG","SinglePhoton","MET"};
+   std::vector<TString> samplesToCombine={"GJets_DR","QCD","ZNuNuGJets","ZGTo2LG","WGToLNuG","ZNuNuJets","WLNuJets","diboson","T5Wg","TChiWG","SinglePhoton"};
    hs    .combineFromSubsamples(samplesToCombine);
    hs_pix.combineFromSubsamples(samplesToCombine);
    h2s   .combineFromSubsamples(samplesToCombine);
@@ -1473,7 +1474,7 @@ void run()
       //VR 2016
       {"pre_ph165/c_MET300/MT300/STgl600/",{"ph1Pt","MET","MT","absphiMETjet","absphiMETph","STg","absphiMETnJetPh","METdotPh",}},                  
    };
-
+   
    for (auto const &sPresel_vVars:msPresel_vVars){
       TString const &sPresel=sPresel_vVars.first;
       for (TString sVar:sPresel_vVars.second){
@@ -1832,7 +1833,7 @@ void run()
       float const count=h2s.getCount("cr",sig);
       logFile<<TString::Format("  %s %g+-%g (frac: %g)",sig.Data(),count,h2s.getCountError("cr",sig),count/(fCR_bkg+count));
    }
-
+   
    // Trigger Isolation
    logFile<<"Not passing Iso40";
  //  for (TString const &sig:{"T5gg","GGM"}){

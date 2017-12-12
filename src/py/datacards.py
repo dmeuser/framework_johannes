@@ -322,7 +322,8 @@ def fillDatacards(scan):
 if __name__ == '__main__':
     basedir="../"
     outdir=basedir+"output/"
-    signal_scan="signal_scan_v19.root"
+    #signal_scan="signal_scan_v19.root"
+    signal_scan="signal_scan_v01D.root"
     rho=-0.0
     #fillDatacards(Scan.T5gg)
     fillDatacards(Scan.T5Wg)

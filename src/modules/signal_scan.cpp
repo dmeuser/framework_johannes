@@ -590,9 +590,9 @@ void run()
 {
  //   runScan_80X(TChiWg);
  //   runScan_80X(TChiNg);
-//    runScan_80X(T5Wg);
+    runScan_80X(T5Wg);
  //   runScan_80X(T5gg);
  //   runScan_80X(T6Wg);
  //   runScan_80X(T6gg);
-  runScan_80X(GGM);
+  //runScan_80X(GGM);
 }

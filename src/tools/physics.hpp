@@ -16,6 +16,10 @@ namespace phys
 
    // matching
    bool matchesGen(tree::Particle const &p,std::vector<tree::GenParticle> const &genP,int pdgId,float dR,float rel_dp);
+   
+   // invariant mass
+   float invmass(tree::Particle const &p1, tree::Particle const &p2);
+   float invmass(TVector3 const &v1, TVector3 const &v2);
 } // namespace phys
 
 #endif /* PHYSICS_HPP__ */

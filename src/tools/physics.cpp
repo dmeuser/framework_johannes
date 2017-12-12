@@ -62,3 +62,16 @@ bool phys::matchesGen(tree::Particle const &p,std::vector<tree::GenParticle> con
    }
    return false;
 }
+
+float phys::invmass(TVector3 const &v1, TVector3 const &v2)
+{  
+   float const p1 = v1.Mag();
+   float const p2 = v2.Mag();
+   TVector3 const pp = v1+v2;
+   return TMath::Sqrt((p1+p2)*(p1+p2)-pp.Mag()*pp.Mag());;
+}
+
+float phys::invmass(tree::Particle const &p1, tree::Particle const &p2)
+{
+   return invmass(p1.p,p2.p);
+}

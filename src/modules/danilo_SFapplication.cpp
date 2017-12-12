@@ -21,7 +21,7 @@
 #include <RooRealVar.h>
 
 Config const &cfg=Config::get();
-static io::RootFileSaver saver("plots.root",TString::Format("SFapplication%.1f",cfg.processFraction*100));
+static io::RootFileSaver saver("plots.root",TString::Format("danilo_SFapplication%.1f",cfg.processFraction*100));
 static io::Logger logFile("SFapplication.log");
 
 
@@ -217,7 +217,7 @@ void plot(TString sSelection,TString sVar,int iRebin,
 {
    bool const showData=(plotMode!=SR_BLIND && plotMode!=PRE);
    bool const showSignal=(plotMode!=CR && plotMode!=VR);
-   io::RootFileReader histReader(TString::Format("histograms_%s.root",cfg.treeVersion.Data()),TString::Format("distributions%.1f",cfg.processFraction*100));
+   io::RootFileReader histReader(TString::Format("danilo_histograms_%s.root",cfg.treeVersion.Data()),TString::Format("danilo_distributions%.1f",cfg.processFraction*100));
 
    TString saveName=sSelection+sVar;
 
@@ -493,6 +493,7 @@ void plot(TString sSelection,TString sVar,int iRebin,
       bkgIntegral.component["GJ"].esyst=integr*cfg.sf.e_GJ/cfg.sf.GJ;
 
       integr=hData.IntegralAndError(1,hData.GetNbinsX()+1,integrErr);
+
       bkgIntegral.component["data"].count=integr;
       bkgIntegral.component["data"].estat=bkgIntegral.component["data"].esyst=0;
 
@@ -520,6 +521,7 @@ void plot(TString sSelection,TString sVar,int iRebin,
       spcan.cdUp();
       spcan.pU_.SetLogy();
    }
+   hStackSum.SetStats(false);
    hStackSum.Draw("axis");
 
    if (plotMode==SR && sVar=="METS") hStackSum.GetYaxis()->SetRangeUser(0.2,300);
@@ -572,7 +574,7 @@ void plot(TString sSelection,TString sVar,int iRebin,
    spcan.pU_.RedrawAxis();
    can.RedrawAxis();
    //le.buildLegend(.55,.71,-1,-1,2).DrawClone();
-   le.buildLegend(.5,.65,-1,-1,2).DrawClone();
+   le.buildLegend(.7,.75,-1,-1,2).DrawClone();
    if (plotMode==CR) {
       TString txt=""; //add "CR" in plot if wished
       if (sSelection.Contains("/0l")) txt+=", 0 leptons";
@@ -592,10 +594,12 @@ void plot(TString sSelection,TString sVar,int iRebin,
       TH1F hRatio;
       if (showData) {
          hRatio=hist::getRatio(hData,st,"Data/Pred.",hist::ONLY1);
+         hRatio.SetStats(false);
          hRatio.Draw("axis e0");
          hRatio.SetMaximum(1.9);
          hRatio.SetMinimum(0.1);
       } else {
+         hRatioSyst.SetStats(false);
          hRatioSyst.Draw("axis e0");
          hRatioSyst.SetMaximum(1.9);
          hRatioSyst.SetMinimum(0.1);
@@ -707,257 +711,54 @@ void plot(TString sSelection,TString sVar,
 extern "C"
 void run()
 {
-   /*
-   plot("pre_ph165/","METdotPh",{-100000,100000},{4000},CR);
-   plot("pre_ph165/","METdotJet",{-100000,100000},{4000},CR);
-   plot("pre_ph165/","absphiMETHT",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/","absphiPhHT",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/","DeltaPhiMETjet100",{0,3.2},{.1},CR);
-   plot("pre_ph165/","vecHTPt",{0,300,600,1000,1010},{20,30,50,10},CR);
+   plot("pre_ph165/combined/","HTG",{0,2400},{240},VR);
+   plot("pre_ph165/combined/","MET",{300,800},{50},VR);
+   plot("pre_ph165/combined/","absdPhi_pmMet_Pho",{0,1.6},{0.16},VR);
    
-   plot("pre_ph165/MT100/","METdotPh",{-100000,100000},{4000},CR);
- //  plot("pre_ph165/MT100/","ph1Pt",{0,300,600,1400,1410},{20,30,50,10},CR);    
-   //2016 studies
-   plot("pre_ph165/dPhiMETphl06/","ph1Pt",{0,300,600,1400,1410},{20,30,50,10},CR);
-   plot("pre_ph165/dPhiMETphl06/","MET",{0,300,600,1000,1410},{20,30,50,10},CR);
-   plot("pre_ph165/dPhiMETphl06/","sieie"      ,{0,0.03},{0.0001},CR);
- 
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","ph1Pt",{0,300,500,600,1000,1100},{20,50,100,200,100},CR);
- //  plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","ph1Pt",{0,500,750,1000,1300},{500,250,250,300},CR);
-
-   */
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","ph1Pt",{0,300,500,600,1000,1100},{20,50,100,200,100},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","MET",{80,100,250,350},{20,30,100},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETph",{0,1.8,2.6,3.3},{0.1,.2,.1},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh",{0,.8,3.2},{.2,.4},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETjet",{0,1.8,2.6,3.3},{.3,.2,.1},CR);   
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","HT",{0,300,500,1200,1550},{100,200,350,350},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},CR);
-   plot("pre_ph165/c_MET100/MT100/","r9",{0,1.1},{0.05},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","r9_phoPtl500",{0,1.1},{0.05},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","r9_phoPtl700",{0,1.1},{0.05},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","r9_phoPtg700",{0,1.1},{0.05},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh_phoPtl500",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh_phoPtl700",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETnJetPh_phoPtg700",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiMETHT",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","absphiPhHT",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","vecHTPt",{0,300,600,1000,1010},{20,30,50,10},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","DeltaPhiMETjet100",{0,3.2},{.1},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETphl02/","ph1Pt",{0,500,750,1000,1300},{500,250,250,300},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/dPhiMETPhg03/","absphiMETnJetPh",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/dPhiMETPhg03/","ph1Pt",{0,500,750,1000,1300},{500,250,250,300},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/dPhiMETPhg03/","STg"   ,{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
+   plot("pre_ph165/VR_SR/","HTG",{0,2400},{240},VR);
+   plot("pre_ph165/VR_SR/","MET",{300,800},{50},VR);
+   plot("pre_ph165/VR_SR/","absdPhi_pmMet_Pho",{0,1.6},{0.16},VR);
+   plot("pre_ph165/VR_SR/","phoPt",{200,1000},{80},VR);
+   plot("pre_ph165/VR_SR/","MT",{300,1000},{70},VR);
+   plot("pre_ph165/VR_SR/","phoEta",{-2.6,2.6},{0.57},VR);
+   plot("pre_ph165/VR_SR/","nEle",{0,5},{1},VR);
+   plot("pre_ph165/VR_SR/","nMu",{0,5},{1},VR);
+   plot("pre_ph165/VR_SR/","lepPt",{0,800},{80},VR);
+   plot("pre_ph165/VR_SR/","nPho",{0,5},{1},VR);
    
-
- //  plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","STg",{600,800,1000,1300,1600},{200,200,300,300},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","MT",{100,250,400,600,700,900},{150,20,50,100,200},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/","Nj",1,CR);
-
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/","absphiMETnJetPh",{0,1.8,2.6,3.3},{.3,.2,.1},CR);   
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/Njl3/","absphiMETjet",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/","absphiMETnJetPh",{0,1.8,2.6,3.3},{.3,.2,.1},CR);   
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/0b/","absphiMETjet",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/","absphiMETnJetPh",{0,1.8,2.6,3.3},{.3,.2,.1},CR);   
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/0l/","absphiMETjet",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","absphiMETnJetPh",{0,1.8,2.6,3.3},{.3,.2,.1},CR);   
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","absphiMETjet",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","relPt2Jets",{0,1},{0.04},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","DeltaS",{0,3.2},{0.2},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","DeltaS1",{0,3.2},{0.2},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","MT",{100,300,500,600},{40,20,100},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","ph1Pt",{0,300,600,1000,1010},{20,30,50,10},CR);
-   plot("pre_ph165/c_MET100/MT100/METl300vMTl300/1l/","MET",{80,100,250,350},{20,30,100},CR);
-       
-   plot("pre_ph165/c_MET100/MT100/METl400vMTl400/","ph1Pt",{0,300,500,600,1000,1100},{20,50,100,200,100},CR);
-   plot("pre_ph165/c_MET100/MT100/METl400vMTl400/","MET",{80,100,250,350},{20,30,100},CR);
-   plot("pre_ph165/c_MET100/MT100/METl400vMTl400/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_MET100/MT100/METl400vMTl400/","HT",{0,300,500,1200,1550},{100,200,350,350},CR);
-   plot("pre_ph165/c_MET100/MT100/METl400vMTl400/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},CR);
-   plot("pre_ph165/c_MET100/MT100/METl400vMTl400/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_MET100/MT100/METl400vMTl400/","MT",{100,250,400,600,700,900},{150,20,50,100,200},CR);
-   plot("pre_ph165/c_MET100/MT100/METl400vMTl400/","Nj",1,CR);
+   plot("pre_ph165/VR_SR/noHTG/","HTG",{0,2400},{240},VR);
+   plot("pre_ph165/VR_SR/noHTG/","MET",{300,800},{50},VR);
+   plot("pre_ph165/VR_SR/noHTG/","absdPhi_pmMet_Pho",{0,1.6},{0.16},VR);
+   plot("pre_ph165/VR_SR/noHTG/","phoPt",{200,1000},{100},VR);
+   plot("pre_ph165/VR_SR/noHTG/","MT",{300,1000},{100},VR);
+   plot("pre_ph165/VR_SR/noHTG/","phoEta",{-2.6,2.6},{0.57},VR);
    
-   plot("pre_ph165/","MT",{0,400,800,2000},{40,80,200},CR);  
-   plot("pre_ph165/","ph1Pt",{0,400,800,1200},{40,80,200},CR);
-      
-   plot("pre_ph165/c_MET150/MT100/METl300vMTl300/","ph1Pt",{0,300,500,600,1000,1100},{20,50,100,200,100},CR);
-   plot("pre_ph165/c_MET150/MT100/METl300vMTl300/","MET",{80,100,250,350},{20,30,100},CR);
-   plot("pre_ph165/c_MET150/MT100/METl300vMTl300/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_MET150/MT100/METl300vMTl300/","HT",{0,300,500,1200,1550},{100,200,350,350},CR);
-   plot("pre_ph165/c_MET150/MT100/METl300vMTl300/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},CR);
-   plot("pre_ph165/c_MET150/MT100/METl300vMTl300/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_MET150/MT100/METl300vMTl300/","MT",{100,250,400,600,700,900},{150,20,50,100,200},CR);
-   plot("pre_ph165/c_MET150/MT100/METl300vMTl300/","Nj",1,CR);
-       
-   plot("pre_ph165/c_MET150/MT150/METl400vMTl400/","ph1Pt",{0,300,500,600,1000},{20,50,100,200},CR);
-   plot("pre_ph165/c_MET150/MT150/METl400vMTl400/","MET",{80,100,250,350},{20,30,100},CR);
-   plot("pre_ph165/c_MET150/MT150/METl400vMTl400/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_MET150/MT150/METl400vMTl400/","HT",{0,300,500,1200,1550},{100,200,350,350},CR);
-   plot("pre_ph165/c_MET150/MT150/METl400vMTl400/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},CR);
-   plot("pre_ph165/c_MET150/MT150/METl400vMTl400/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_MET150/MT150/METl400vMTl400/","MT",{100,250,400,600,700,900},{150,20,50,100,200},CR);     
-   plot("pre_ph165/c_MET150/MT150/METl400vMTl400/","Nj",1,CR);   
+   plot("pre_ph165/VR_SR/noLepton/","HTG",{0,2400},{240},VR);
+   plot("pre_ph165/VR_SR/noLepton/","MET",{300,800},{50},VR);
+   plot("pre_ph165/VR_SR/noLepton/","absdPhi_pmMet_Pho",{0,1.6},{0.16},VR);
+   plot("pre_ph165/VR_SR/noLepton/","phoPt",{200,1000},{80},VR);
+   plot("pre_ph165/VR_SR/noLepton/","MT",{300,1000},{70},VR);
+   plot("pre_ph165/VR_SR/noLepton/","phoEta",{-2.6,2.6},{0.57},VR);
    
-   // Control region
-   /*
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","ph1Pt",{0,300,500,600,1000,1100},{20,50,100,200,100},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","MET",{80,100,220,400,500},{20,30,180,100},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","METS",{20,80,85},{5,5},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","HT",{0,300,500,1200,1550},{100,200,350,350},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","MT",{100,250,400,600,700,900},{150,20,50,100,200},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","sieie1",{0.0,0.008,0.011},{0.0005,0.0002},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","sipip1",{0.0,0.009,0.011,0.015,0.03},{0.001,0.0002,0.0005,0.005},CR);
-
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","Nph",1,CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","Nj",1,CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","Nele",1,CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","Nmu",1,CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/","Nl",1,CR);
-
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/eta1/","sieie1",{0.0,0.008,0.011},{0.0005,0.0002},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/eta1/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-
-   // with b-veto
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","ph1Pt",{0,300,500,600,1000,1100},{20,50,100,200,100},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","MET",{80,100,220,400,500},{20,30,180,100},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","METS",{20,80,85},{5,5},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","HT",{0,300,500,1200,1550},{100,200,350,350},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","MT",{100,250,400,600,700,900},{150,20,50,100,200},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","sieie1",{0.0,0.008,0.011},{0.0005,0.0002},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","sipip1",{0.0,0.009,0.011,0.015,0.03},{0.001,0.0002,0.0005,0.005},CR);
-
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","Nph",1,CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","Nj",1,CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","Nele",1,CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","Nmu",1,CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0bT/","Nl",1,CR);
-
-   // Split by number of leptons
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0l/","ph1Pt",{0,300,500,600,1000,1100},{20,50,100,200,100},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0l/","MET",{80,100,220,400,500},{20,30,180,100},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0l/","METS",{20,80,85},{5,5},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0l/","absphiMETjet",{0,1.8,2.6,3.3},{.3,.2,.1},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0l/","HT",{0,300,500,1200,1550},{100,200,350,350},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0l/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0l/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0l/","MT",{100,250,400,600,700,900},{150,20,50,100,200},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/0l/","Nph",1,CR);
-
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","ph1Pt",{0,300,500,600,1000,1100},{20,50,100,200,100},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","MET",{80,100,220,400,500},{20,30,180,100},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","METS",{20,80,85},{5,5},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","absphiMETjet",{0,.4,3.2,3.4},{.2,.4,.1},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","HT",{0,300,500,1200,1550},{100,200,350,350},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","STg",{260,330,450,750,1000,1250},{90,120,150,250,250},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","MT",{100,250,400,600,700,900},{150,20,50,100,200},CR);
-   plot("pre_ph165/c_S30/MT100/Sl80vMTl300/1l/","Nph",1,CR);
-*/
-/*
-   // Validation region
-   plot("pre_ph165/c_S80/MT300/STgl600/","ph1Pt",{140,300,400},{20,50},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","MET",{100,280,380},{30,50},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","METS",{80,200,500},{40,50},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","HT",{0,300,500,1200,1550},{100,200,700,350},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","STg",{260,620},{20},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","MT",{100,250,400,600,700,900},{150,20,50,100,200},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","sieie1",{0.0,0.008,0.011},{0.0005,0.0002},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","sipip1",{0.0,0.009,0.011,0.015,0.03},{0.001,0.0002,0.0005,0.005},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","absphiMETjet",{0,.4,3.2,3.4},{.2,.4,.1},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},VR);
-   plot("pre_ph165/c_S80/MT300/STgl600/","Nph",1,VR);
-   */
-
-   //Validation region 2016
+   plot("pre_ph165/VR_SR/noDiphoton/","HTG",{0,2400},{240},VR);
+   plot("pre_ph165/VR_SR/noDiphoton/","MET",{300,800},{50},VR);
+   plot("pre_ph165/VR_SR/noDiphoton/","absdPhi_pmMet_Pho",{0,1.6},{0.16},VR);
+   plot("pre_ph165/VR_SR/noDiphoton/","phoPt",{200,1000},{80},VR);
+   plot("pre_ph165/VR_SR/noDiphoton/","MT",{300,1000},{70},VR);
+   plot("pre_ph165/VR_SR/noDiphoton/","phoEta",{-2.6,2.6},{0.57},VR);
    
-   plot("pre_ph165/c_MET300/MT300/STgl600/","STg",{400,620},{20},VR);   
-   plot("pre_ph165/c_MET300/MT300/STgl600/","ph1Pt",{140,300,400},{20,50},VR);
-   plot("pre_ph165/c_MET300/MT300/STgl600/","MET",{100,280,380},{30,50},VR);
-   plot("pre_ph165/c_MET300/MT300/STgl600/","MT",{100,280,400,600,700,900},{180,120,50,100,200},VR);  
-   plot("pre_ph165/c_MET300/MT300/STgl600/","absphiMETjet",{0,.4,3.2,3.4},{.2,.4,.1},VR);
-   plot("pre_ph165/c_MET300/MT300/STgl600/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},VR);
-   plot("pre_ph165/c_MET300/MT300/STgl600/","absphiMETnJetPh",{0,3,3.2,3.3},{.3,0.2,.1},VR);
-   plot("pre_ph165/c_MET300/MT300/STgl600/","METdotPh",{-100000,100000},{10000},VR);
+   plot("pre_ph165/VR_SR/exclusiv/","HTG",{0,2400},{240},VR);
+   plot("pre_ph165/VR_SR/exclusiv/","MET",{300,800},{50},VR);
+   plot("pre_ph165/VR_SR/exclusiv/","absdPhi_pmMet_Pho",{0,1.6},{0.16},VR);
+   plot("pre_ph165/VR_SR/exclusiv/","phoPt",{200,1000},{100},VR);
+   plot("pre_ph165/VR_SR/exclusiv/","MT",{300,1000},{100},VR);
+   plot("pre_ph165/VR_SR/exclusiv/","phoEta",{-2.6,2.6},{0.57},VR);
    
-   // preselection
-//   plot("pre_ph165/","METS_logx",1,PRE);
-
-   // Signal region
-   /*
-   plot("pre_ph165/c_S80/MT300/","ph1Pt",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","MET",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","METS",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","HT",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","METSHT",5,SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","STg",5,SR_BLIND);
-   plot("pre_ph165/c_MET300/MT300/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
-   plot("pre_ph165/c_MET300/MT300/","STg",{480,600,800,1000,1300,1600},{120,200,200,300,300},SR);  
-   plot("pre_ph165/c_MET300/MT300/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},SR);
-   plot("pre_ph165/c_MET300/MT300/","absphiMETHT",{0,1.8,2.6,3.3},{.3,.2,.1},SR);
-   plot("pre_ph165/c_MET300/MT300/","absphiPhHT",{0,1.8,2.6,3.3},{.3,.2,.1},SR);
-   plot("pre_ph165/c_MET300/MT300/","vecHTPt",{0,300,600,1000,1010},{20,30,50,10},SR);
-   plot("pre_ph165/c_MET300/MT300/","METdotPh",{-100000,-90000,100000},{5000,19000},SR);
-   plot("pre_ph165/c_MET300/MT300/","METSHT",{0,4,12,20,40,100},{2,1,2,20,60},SR);
-   plot("pre_ph165/c_MET300/MT300/","ph1Pt",{0,1500},{100},SR);
-   plot("pre_ph165/c_MET300/MT300/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
-   
-   // halo/spike check
-   /*
-   plot("pre_ph165/c_S80/MT300/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},SR_CHECK);
-   plot("pre_ph165/c_S80/MT300/","sieie1",{0.0,0.008,0.011},{0.0005,0.0002},SR_CHECK);
-   plot("pre_ph165/c_S80/MT300/","sipip1",{0.0,0.009,0.011,0.015,0.03},{0.001,0.0002,0.0005,0.005},CR);
-   plot("pre_ph165/c_S80/MT300/","Nph",1,SR_CHECK);
-   plot("pre_ph165/c_S80/MT300/eta1/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},SR_CHECK);
-   plot("pre_ph165/c_S80/MT300/eta1/","sieie1",{0.0,0.008,0.011},{0.0005,0.0002},SR_CHECK);
-   plot("pre_ph165/c_S80/MT300/eta1/","Nph",1,SR_CHECK);
-   
-
-   // Interpretation binning
-   plot("pre_ph165/c_S80/MT300/","METS",{80,200,400,750,800},{120,200,350,50},SR_BLIND);
-   plot("pre_ph165/c_S80/MT300/","STg",{260,600,800,1000,1200},{340,200,200,200},SR_BLIND);
-   // unblinded
-   plot("pre_ph165/c_S80/MT300/","METS",{80,200,400,750,800},{120,200,350,50},SR);
-   plot("pre_ph165/c_S80/MT300/","STg",{260,600,800,1000,1200},{340,200,200,200},SR);
-
-   // excluding VR
-   plot("pre_ph165/c_S80/MT300/STg600/","STg",{600,800,1000,1200},{200,200,200},SR);
-*/
-   // further SR distributions with data
-
-   //2016 
-   plot("pre_ph165/c_MET300/MT300/STg600/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
-   plot("pre_ph165/c_MET300/MT300/STg600/","absphiMETnJetPh",{0,3,3.2,3.3},{.3,0.2,.1},VR);
-//   plot("pre_ph165/c_MET300/MT300/STg600/","ph1Pt",{0,700,1500},{100,200},SR);
-//   plot("pre_ph165/c_MET300/MT300/STg600/","MET",{0,700,1500},{100,200},SR);
-//   plot("pre_ph165/c_MET300/MT300/STg600/","absphiMETph",{0,1.8,2.6,3.3},{.3,.2,.1},SR);
- //  plot("pre_ph165/c_MET300/MT300/STg600/","r9",{0,1.1},{0.05},SR);
-//   plot("pre_ph165/c_MET300/MT300/STg600/","r9_Stgg1300",{0,1.1},{0.05},SR);
- //  plot("pre_ph165/c_MET300/MT300/STg600/","METdotPh",{-100000,-90000,100000},{5000,19000},SR);
-//   plot("pre_ph165/c_MET300/MT300/STg600/","DeltaPhiMETjet100",{0,3.2},{.1},SR);
-  
-   
-   //2015
-   /*
-   plot("pre_ph165/c_S80/MT300/","ph1Pt",{0,400,700,1000},{100,150,300},SR);
-   plot("pre_ph165/c_S80/MT300/","MET"  ,{100,400,700,1000},{100,150,300},SR);
-   plot("pre_ph165/c_S80/MT300/","MT"   ,{0,600,900,1500},{100,150,600},SR);
-   plot("pre_ph165/c_S80/MT300/","HT"   ,{0,300,600,1000,1500},{100,150,400,500},SR);
-    */
+   plot("pre_ph165/VR/exclusiv/","HTG",{0,1200},{120},VR);
+   plot("pre_ph165/VR/exclusiv/","MET",{200,500},{50},VR);
+   plot("pre_ph165/VR/exclusiv/","absdPhi_pmMet_Pho",{0,1.6},{0.16},VR);
+   plot("pre_ph165/VR/exclusiv/","phoPt",{150,400},{22},VR);
+   plot("pre_ph165/VR/exclusiv/","MT",{200,700},{50},VR);
+   plot("pre_ph165/VR/exclusiv/","phoEta",{-2.6,2.6},{0.57},VR);
+   plot("pre_ph165/VR/exclusiv/","STG",{400,620},{20},VR);
 }

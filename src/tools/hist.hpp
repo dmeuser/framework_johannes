@@ -36,7 +36,7 @@ namespace hist
       void addHist(TString const &varName,TString const &title, std::vector<float> edges, std::vector<float> widths);
       // 2d
       void addHist(TString const &varName,TString const &title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup);
-
+      void addHist(TString const &varName,TString const &title, std::vector<float> edges_x, std::vector<float> widths_x, std::vector<float> edges_y, std::vector<float> widths_y);
       // simple counters
       void addCounter(TString const &varName);
 
@@ -84,19 +84,24 @@ namespace hist
    template <>
    void Histograms<TH1F>::addHist(TString const&,TString const&,Int_t,Double_t,Double_t,Int_t,Double_t,Double_t)=delete;
    template <>
+   void Histograms<TH1F>::addHist(TString const &varName,TString const &title, std::vector<float> edges_x, std::vector<float> widths_x, std::vector<float> edges_y, std::vector<float> widths_y)=delete;
+   template <>
    void Histograms<TH2F>::fill(TString const&,float)=delete;
    template <>
    void Histograms<TH1F>::fill(TString const&,float,float)=delete;
-   template <>
-   void Histograms<TH2F>::mergeOverflow(bool)=delete;
+   //~ template <>
+   //~ void Histograms<TH2F>::mergeOverflow(bool)=delete;
 
    std::vector<double> getBinVector(std::vector<float> edges, std::vector<float> widths);
    TH1F fromWidths(const char *name, const char *title,std::vector<float> edges, std::vector<float> widths);
+   TH2F fromWidths_2d(const char *name, const char *title, std::vector<float> edges_x, std::vector<float> widths_x, std::vector<float> edges_y, std::vector<float> widths_y);
+
 
    TH1F rebinned(TH1F const &h, std::vector<float> const &edges, std::vector<float> const &widths,bool mergeOverflow=true,bool mergeUnderflow=true);
    TH1F rebinned(TH1F const &h, std::vector<double> const &binedges,bool mergeOverflow=true,bool mergeUnderflow=true);
    void divideByBinWidth(TH1& h,bool divideLastBin=true);
    void mergeOverflow(TH1& h, bool includeUnderflow=true);
+   void mergeOverflow(TH2& h, bool includeUnderflow=true);
 
    void setMaximum(TH1& h,std::vector<TH1F> hists,float multiplier=1.1);
    void setMinimum(TH1& h,std::vector<TH1F> hists,float multiplier=0.9,bool allowNegative=true);

@@ -60,6 +60,15 @@ void hist::Histograms<HIST>::addHist(TString const &varName,TString const &title
 }
 
 template <class HIST>
+void hist::Histograms<HIST>::addHist(TString const &varName,TString const &title, std::vector<float> edges_x, std::vector<float> widths_x, std::vector<float> edges_y, std::vector<float> widths_y)
+{
+   TH1::SetDefaultSumw2();
+   mmH_[varName]=std::map<TString,HIST>();
+   for (TString const &s: vsSamples_)
+      mmH_[varName][s]=fromWidths_2d(varName+"_"+s+TString::Format("_%d",iInstance_),title,edges_x,widths_x,edges_y,widths_y);
+}
+
+template <class HIST>
 void hist::Histograms<HIST>::addCounter(TString const &varName)
 {
    mCount_[varName]=std::map<TString,float>();
@@ -286,6 +295,13 @@ TH1F hist::fromWidths(const char *name, const char *title,std::vector<float> edg
    return TH1F(name,title,xbins.size()-1,&xbins[0]);
 }
 
+TH2F hist::fromWidths_2d(const char *name, const char *title, std::vector<float> edges_x, std::vector<float> widths_x, std::vector<float> edges_y, std::vector<float> widths_y)
+{
+   std::vector<double> xbins=getBinVector(edges_x, widths_x);
+   std::vector<double> ybins=getBinVector(edges_y, widths_y);
+   return TH2F(name,title,xbins.size()-1,&xbins[0],ybins.size()-1,&ybins[0]);
+}
+
 TH1F hist::rebinned(TH1F const &h, std::vector<float> const &edges, std::vector<float> const &widths,bool mergeOverflow,bool mergeUnderflow)
 {
    std::vector<double> binedges=getBinVector(edges, widths);
@@ -349,6 +365,57 @@ void hist::mergeOverflow(TH1& h, bool includeUnderflow)
    // clear overflow
    h.SetBinContent(0,0);
    h.SetBinError(0,0);
+}
+
+void hist::mergeOverflow(TH2& h, bool includeUnderflow)
+{
+   int N_X=h.GetNbinsX();
+   int N_Y=h.GetNbinsY();
+   includeUnderflow = true;
+   //loop over Y-bins
+   for (int i=0; i<=N_Y+1; i++){
+      // -- overflow
+      float cont=h.GetBinContent(N_X,i)+h.GetBinContent(N_X+1,i);
+      float err2=util::quadSum<double>({h.GetBinError(N_X,i),h.GetBinError(N_X+1,i)});
+      // set content+error of last bin
+      h.SetBinContent(N_X,i,cont);
+      h.SetBinError(N_X,i,TMath::Sqrt(err2));
+      // clear overflow
+      h.SetBinContent(N_X+1,i,0);
+      h.SetBinError(N_X+1,i,0);
+      if (!includeUnderflow) return;
+      // -- underflow
+      cont=h.GetBinContent(0,i)+h.GetBinContent(1,i);
+      err2=util::quadSum<double>({h.GetBinError(0,i),h.GetBinError(1,i)});
+      // set content+error of first bin
+      h.SetBinContent(1,i,cont);
+      h.SetBinError(1,i,TMath::Sqrt(err2));
+      // clear overflow
+      h.SetBinContent(0,i,0);
+      h.SetBinError(0,i,0);
+   }
+   //Loop over X-bins
+   for (int i=0; i<=N_X+1; i++){
+      // -- overflow
+      float cont=h.GetBinContent(i,N_Y)+h.GetBinContent(i,N_Y+1);
+      float err2=util::quadSum<double>({h.GetBinError(i,N_Y),h.GetBinError(i,N_Y+1)});
+      // set content+error of last bin
+      h.SetBinContent(i,N_Y,cont);
+      h.SetBinError(i,N_Y,TMath::Sqrt(err2));
+      // clear overflow
+      h.SetBinContent(i,N_Y+1,0);
+      h.SetBinError(i,N_Y+1,0);
+      if (!includeUnderflow) return;
+      // -- underflow
+      cont=h.GetBinContent(i,0)+h.GetBinContent(i,1);
+      err2=util::quadSum<double>({h.GetBinError(i,0),h.GetBinError(i,1)});
+      // set content+error of first bin
+      h.SetBinContent(i,1,cont);
+      h.SetBinError(i,1,TMath::Sqrt(err2));
+      // clear overflow
+      h.SetBinContent(i,0,0);
+      h.SetBinError(i,0,0);
+   }
 }
 
 

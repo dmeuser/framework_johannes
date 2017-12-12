@@ -47,7 +47,7 @@ void run()
          hs.fill("Nvtx_w",*Nvtx);
       } // evt loop
 
-      // hs.scaleLumi();
+      //~ hs.scaleLumi();
       hs.mergeOverflow();
       file.Close();
    } // datasets
