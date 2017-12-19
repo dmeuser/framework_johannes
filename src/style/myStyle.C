@@ -22,6 +22,7 @@
    gStyle->SetHistLineColor(kGray+2);
    gStyle->SetHistFillColor(kGray+2);
    gStyle->SetHistFillStyle(0);
+   gStyle->SetNumberContours(255);
 
    gStyle->SetGridStyle(1);
    gStyle->SetGridColor(kGray+1);

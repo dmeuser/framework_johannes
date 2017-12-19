@@ -227,6 +227,7 @@ void run()
    ADD_HIST("pre_ph165/VR/exclusiv/MT"   ,";MT(#gamma_{1},p_{T}^{miss});EventsBIN" ,50,300,1000);
    ADD_HIST("pre_ph165/VR/exclusiv/phoEta" ,";#gamma #eta;EventsBIN",52,-2.6,2.6);
    ADD_HIST("pre_ph165/VR/exclusiv/STG"   ,";STg;EventsBIN" ,50,400,800);
+   ADD_HIST("pre_ph165/VR/exclusiv/absphiMETnJetPh",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);
    
    
    //Files for eventnumbers of overlapping regions for combination
@@ -602,6 +603,13 @@ void run()
                      if (MT_LepMet < 100) leptoVeto = false;
                   }
                }
+               if (leptoVeto == true) {
+                  if (mPho.size() > 1) {
+                     if (mPho[0]->p.Pt() > 40 && mPho[1]->p.Pt() > 40){
+                        leptoVeto = false;
+                     }
+                  }
+               }
             }
                
             bool diphotonVeto = false;
@@ -732,6 +740,7 @@ void run()
                         hs.fill("pre_ph165/VR/exclusiv/MT",MT);
                         hs.fill("pre_ph165/VR/exclusiv/phoEta",pho[0]->p.Eta());
                         hs.fill("pre_ph165/VR/exclusiv/STG",STg);
+                        hs.fill("pre_ph165/VR/exclusiv/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
                      }
                   }
                }
@@ -786,7 +795,7 @@ void run()
       {"pre_ph165/VR_SR/noLepton/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta"}},
       {"pre_ph165/VR_SR/noDiphoton/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta"}},
       {"pre_ph165/VR_SR/exclusiv/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta"}},
-      {"pre_ph165/VR/exclusiv/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta","STG"}},
+      {"pre_ph165/VR/exclusiv/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta","STG","absphiMETnJetPh"}},
    };
    
    for (auto const &sPresel_vVars:msPresel_vVars){
@@ -829,7 +838,7 @@ void run()
       {"pre_ph165/VR_SR/noLepton/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta"}},
       {"pre_ph165/VR_SR/noDiphoton/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta"}},
       {"pre_ph165/VR_SR/exclusiv/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta"}},
-      {"pre_ph165/VR/exclusiv/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta","STG"}},
+      {"pre_ph165/VR/exclusiv/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta","STG","absphiMETnJetPh"}},
    };
    saveHistograms(msPresel_vVars,saver_hist,hs,hs_pix,true);
    

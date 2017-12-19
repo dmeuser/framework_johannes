@@ -20,7 +20,8 @@ void setTDRStyle() {
 // For the canvas:
   tdrStyle->SetCanvasBorderMode(0);
   tdrStyle->SetCanvasColor(kWhite);
-  tdrStyle->SetCanvasDefH(600); //Height of canvas
+  //~ tdrStyle->SetCanvasDefH(600); //Height of canvas
+  tdrStyle->SetCanvasDefH(500);
   tdrStyle->SetCanvasDefW(600); //Width of canvas
   tdrStyle->SetCanvasDefX(0);   //POsition on screen
   tdrStyle->SetCanvasDefY(0);
@@ -155,7 +156,8 @@ void setTDRStyle() {
 
   tdrStyle->SetHatchesLineWidth(5);
   tdrStyle->SetHatchesSpacing(0.05);
-
+  
+  tdrStyle->SetPalette(kRainBow);
   tdrStyle->cd();
 
 }
