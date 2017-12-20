@@ -625,7 +625,7 @@ void run()
                      if (isData && pass==pass_normal) {total << *runNo << ":" << *lumNo << ":" << *evtNo << std::endl;}
                      
                      if (pho[0]->isMedium && Nph > 1) {
-                        if(pho[1]->isMedium && pho[1]->p.Pt() > 40 && phys::invmass(*pho[0],*pho[1]) > 105) {
+                        if(pho[1]->isMedium && pho[1]->p.Pt() > 40 && phys::invmass(*pho[0],*pho[1]) > 105 && pho[0]->p.DeltaR(pho[1]->p) > 0.3) {
                            hs.fill("pre_ph165/c_MET300/MT300/STg600/diphoton/STg_SRbin",STg);
                            hs.fill("pre_ph165/c_MET300/MT300/STg600/diphoton/STg",STg);
                            diphotonVeto = true;
