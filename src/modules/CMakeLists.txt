@@ -10,6 +10,7 @@ set(MODULES
   danilo_SFapplication
   danilo_check_overlap
   danilo_plot2d_scan
+  danilo_signal_scan
   )
 
 foreach(MODULE ${MODULES})

@@ -20,7 +20,7 @@ extern "C"
 void run()
 {
    //~ TFile file("/user/dmeuser/master/data/v01D/SinglePhoton_03Feb2017.root","read");
-   TFile file("/user/dmeuser/master/root-files/overlap_lepton_1.root","read");
+   TFile file("/user/dmeuser/master/root-files/overlap_diphoton_1.root","read");
 
    TTreeReader reader(cfg.treeName, &file);
    TTreeReaderValue<float> w_pu(reader, "pu_weight");
@@ -44,8 +44,8 @@ void run()
    TTreeReaderValue<bool> baseMETTr(reader, "HLT_PFMET170_HBHECleaned_v");
    TTreeReaderValue<bool> trigger_PhMET(reader, "HLT_Photon36_R9Id90_HE10_Iso40_EBOnly_PFMET40_v");
    
-   std::vector<long int> wrong = {1289901438,89000916,321243519};
-   //~ std::vector<long int> wrong = {844732197,321243519};
+   //~ std::vector<long int> wrong = {1289901438,89000916,321243519};
+   std::vector<long int> wrong = {844732197,321243519};
 
    while (reader.Next()){
       if (std::find(wrong.begin(), wrong.end(), *evtNo) != wrong.end()){
@@ -71,9 +71,9 @@ void run()
                //~ std::cout << fabs(pho.p.Eta()-pho_2.p.Eta()) << "," << fabs(pho.p.Phi()-pho_2.p.Phi()) << std::endl;
             //~ }
          //~ }
-         std::cout << phys::invmass((*photons)[0],(*photons)[1]) << std::endl;
          //~ std::cout << phys::invmass((*photons)[0],(*photons)[1]) << std::endl;
-         //~ std::cout << (*photons)[0].p.DeltaR((*photons)[1].p) << std::endl;
+         //~ std::cout << phys::invmass((*photons)[0],(*photons)[1]) << std::endl;
+         std::cout << (*photons)[0].p.DeltaR((*photons)[1].p) << std::endl;
          
          //~ bool leptoVeto = false;
          //~ for (tree::Muon const &mu: *muons) {

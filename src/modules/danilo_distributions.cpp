@@ -229,6 +229,9 @@ void run()
    ADD_HIST("pre_ph165/VR/exclusiv/STG"   ,";STg;EventsBIN" ,50,400,800);
    ADD_HIST("pre_ph165/VR/exclusiv/absphiMETnJetPh",";|#Delta#phi|(%MET,nearest jet/#gamma);EventsBIN",50,0,5);
    
+   //For Limits and syst errors
+   ADD_HIST("pre_ph165/c_MET300/MT300/exclusiv/STg"   ,";STg;EventsBIN"           ,2000,0,2000);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh",";|#Delta#phi(p_{T}^{miss},nearest jet/#gamma)| (radians);EventsBIN",50,0,5);  
    
    //Files for eventnumbers of overlapping regions for combination
    std::string outdir (CMAKE_SOURCE_DIR);
@@ -425,18 +428,7 @@ void run()
             float relPt2Jets = 0;
             float DeltaS = 0;
             float DeltaS1 = 0;
-            
-            //Calculate EMHT (analog to photon+emht analysis)
-            float emht = pho[0]->p.Pt();
-            for (auto const &jet: *jets) {
-               if (jet.p.Pt() > 30 && fabs(jet.p.Eta()) < 3) {
-                  if (jet.p.DeltaR(pho[0]->p) > 0.3) {
-                     emht += jet.p.Pt();
-                  }
-               }
-            }
 
-            
             if (cjets.size() == 1 ) {
                TVector3 vPhotonMet = pho[0]->p + MET->p;
                DeltaS1 = std::acos((vPhotonMet.Pt()*cjets[0].p.Pt()*std::cos(vPhotonMet.DeltaPhi(cjets[0].p)))/(vPhotonMet.Pt()*cjets[0].p.Pt()));
@@ -522,7 +514,9 @@ void run()
             
             
             ////Vetos for combination
-            // veto for photon+lepton analysis
+            ///////////////
+            //Lepton Veto//
+            ///////////////
             bool leptoVeto = false;
             std::vector<tree::Electron const *> el_comb;
             std::vector<tree::Muon const *> mu_comb;
@@ -584,10 +578,10 @@ void run()
                if (leadLep->p.DeltaR(pho[0]->p) < 0.8) leptoVeto = false;
                else {
                   for (tree::Electron const &ele: *electrons) {
-                     if (ele.p.DeltaR(pho[0]->p) < 0.3 && ele.p.Pt() > 2.0) leptoVeto = false;
+                     if (ele.p.DeltaR(pho[0]->p) < 0.3 && ele.pUncorrected.Pt() > 2.0) leptoVeto = false;
                   }
                   for (tree::Muon const &mu: *muons) {
-                     if (mu.p.DeltaR(pho[0]->p) < 0.3 && mu.p.Pt() > 2.0) leptoVeto = false;
+                     if (mu.p.DeltaR(pho[0]->p) < 0.3 && mu.p.Pt() > 3.0) leptoVeto = false;
                   }
                }
                if (leptoVeto == true) {
@@ -611,9 +605,33 @@ void run()
                   }
                }
             }
-               
+            
+            /////////////////
+            //Diphoton Veto//
+            /////////////////
             bool diphotonVeto = false;
+            if (pho[0]->isMedium && pho[0]->p.Pt() > 40 && Nph > 1 && met > 100) {
+               if(pho[1]->isMedium && pho[1]->p.Pt() > 40 && phys::invmass(*pho[0],*pho[1]) > 105 && pho[0]->p.DeltaR(pho[1]->p) > 0.3) {
+                  diphotonVeto = true;
+               }
+            }
+            
+            /////////////
+            //EMHT Veto//
+            /////////////
             bool emhtVeto = false;
+            float emht = pho[0]->p.Pt();
+            for (auto const &jet: *jets) {
+               if (jet.p.Pt() > 30 && fabs(jet.p.Eta()) < 3) {
+                  if (jet.p.DeltaR(pho[0]->p) > 0.3) {
+                     emht += jet.p.Pt();
+                  }
+               }
+            }
+            if (emht > 700 && met > 350 && fabs(dPhiMETph) > 0.3 && fabs(fabs(dPhiMETph)-TMath::Pi()) > 0.3 && phoPt > 100)  {
+               emhtVeto = true;
+            }
+            
             
             if (phoPt>180 && (!isData || (*trigger_Ph && triggerMatch))){
 
@@ -660,7 +678,16 @@ void run()
                         if (isData && pass==pass_normal) {exclusive << *runNo << ":" << *lumNo << ":" << *evtNo << std::endl;}
                      }
                   }
+                  if (emhtVeto == 0 && leptoVeto == 0 && diphotonVeto == 0) {
+                     hs.fill("pre_ph165/c_MET300/MT300/exclusiv/STg",STg);
+                  }
                }
+               if (MT > 100 && met > 100 && emhtVeto == 0 && leptoVeto == 0 && diphotonVeto == 0){
+                  if (met < 300 || MT < 300){
+                     hs.fill("pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
+                  }
+               }
+                     
                
                if (met > 100 && MT > 100) {
                   //Fill hists for background check in cut variables
@@ -777,7 +804,7 @@ void run()
    hs_pix.combineFromSubsamples(samplesToCombine);
    hs2d.combineFromSubsamples(samplesToCombine);
    io::RootFileSaver saver("plots.root",TString::Format("danilo_distributions%.1f",cfg.processFraction*100));
-   io::RootFileSaver saver_hist(TString::Format("danilo_histograms_%s.root",cfg.treeVersion.Data()),TString::Format("danilo_distributions%.1f",cfg.processFraction*100),false);
+   io::RootFileSaver saver_hist(TString::Format("histograms_%s.root",cfg.treeVersion.Data()),TString::Format("danilo_distributions%.1f",cfg.processFraction*100),false);
    TCanvas can;
    can.SetLogy();
    // what to plot in which preselection
@@ -796,6 +823,9 @@ void run()
       {"pre_ph165/VR_SR/noDiphoton/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta"}},
       {"pre_ph165/VR_SR/exclusiv/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta"}},
       {"pre_ph165/VR/exclusiv/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta","STG","absphiMETnJetPh"}},
+   //for final datacards
+      {"pre_ph165/c_MET300/MT300/exclusiv/",{"STg"}},
+      {"pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/",{"absphiMETnJetPh"}},
    };
    
    for (auto const &sPresel_vVars:msPresel_vVars){
@@ -839,6 +869,9 @@ void run()
       {"pre_ph165/VR_SR/noDiphoton/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta"}},
       {"pre_ph165/VR_SR/exclusiv/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta"}},
       {"pre_ph165/VR/exclusiv/",{"HTG","MET","absdPhi_pmMet_Pho","phoPt","MT","phoEta","STG","absphiMETnJetPh"}},
+      //for final datacards
+      {"pre_ph165/c_MET300/MT300/exclusiv/",{"STg"}},
+      {"pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/",{"absphiMETnJetPh"}},
    };
    saveHistograms(msPresel_vVars,saver_hist,hs,hs_pix,true);
    

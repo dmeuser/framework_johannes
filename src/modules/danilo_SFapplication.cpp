@@ -762,4 +762,8 @@ void run()
    plot("pre_ph165/VR/exclusiv/","phoEta",{-2.6,2.6},{0.57},VR);
    plot("pre_ph165/VR/exclusiv/","STG",{400,620},{20},VR);
    plot("pre_ph165/VR/exclusiv/","absphiMETnJetPh",{0,3.14},{0.4},VR);
+   
+   plot("pre_ph165/c_MET300/MT300/STg600/exclusive/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
+   
+   plot("pre_ph165/c_MET300/MT300/exclusiv/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
 }

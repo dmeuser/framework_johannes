@@ -12,7 +12,7 @@ class Scan:
     T5gg,T5Wg,T6Wg,T6gg,GGM,TChiWg,TChiNg=range(7)
 
 def prepareDatacard(obs,count,estat,esyst,eISR,correlated,mcUncertainties,pointName,sScan):
-    dataCardPath=outdir+"datacards/"+sScan+"/datacard_%s.txt"%pointName
+    dataCardPath=outdir+"datacards/exclusiv/"+sScan+"/datacard_%s.txt"%pointName
     nBins=len(obs)
     card="# "+pointName
     card+="""
@@ -159,7 +159,7 @@ def getSignalYield(point):
     f=rt.TFile(outdir+signal_scan,"read")
     hist=f.Get("pre_ph165/c_MET300/MT300/STg/"+point)
     hist_gen=f.Get("pre_ph165/c_MET300/MT300/STg/"+point+"_gen")
-    hist_ISR=f.Get("pre_ph165/c_MET300/MT300/STg/"+point+"SRErrISR")  
+    hist_ISR=f.Get("pre_ph165/c_MET300/MT300/STg/"+point+"SRErrISR")
     if math.isnan(hist.Integral()):
         # input tree for model was bad->Ngen=0->weight=inf
         f.Close()
@@ -186,7 +186,8 @@ def getSignalYield(point):
 
 def getSignalContamination(point):
     f=rt.TFile(outdir+signal_scan,"read")
-    hist=f.Get("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/"+point)
+    #~ hist=f.Get("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/"+point)
+    hist=f.Get("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/exclusiv/"+point)
     c=hist.Integral()
     if math.isnan(c):
         # input tree for model was bad->Ngen=0->weight=inf
@@ -261,13 +262,16 @@ def fillDatacards(scan):
     eISR={}
     f=rt.TFile(outdir+"yields.root","read")
     for bkg in backgrounds:
-        hist=f.Get("pre_ph165/c_MET300/MT300/STg/"+bkg)
+        #~ hist=f.Get("pre_ph165/c_MET300/MT300/STg/"+bkg)
+        hist=f.Get("pre_ph165/c_MET300/MT300/exclusiv/STg/"+bkg)
         count[bkg]=[hist.GetBinContent(i) for i in range(1,5)]
         # subtract "additional" 1 from count index, because 1st bin is already left out
         estat[bkg]=[1+hist.GetBinError(i)/count[bkg][i-1] for i in range(1,5)]
-        hist=f.Get("pre_ph165/c_MET300/MT300/STg/"+bkg+"_esyst")
+        #~ hist=f.Get("pre_ph165/c_MET300/MT300/STg/"+bkg+"_esyst")
+        hist=f.Get("pre_ph165/c_MET300/MT300/exclusiv/STg/"+bkg+"_esyst")
         esyst[bkg]=[1+hist.GetBinContent(i)/count[bkg][i-1] for i in range(1,5)]
-    hist=f.Get("pre_ph165/c_MET300/MT300/STg/data")
+    #~ hist=f.Get("pre_ph165/c_MET300/MT300/STg/data")
+    hist=f.Get("pre_ph165/c_MET300/MT300/exclusiv/STg/data")
     obs=[int(hist.GetBinContent(i)) for i in range(1,5)]
     f.Close()
 
@@ -323,7 +327,8 @@ if __name__ == '__main__':
     basedir="../"
     outdir=basedir+"output/"
     #signal_scan="signal_scan_v19.root"
-    signal_scan="signal_scan_v01D.root"
+    #~ signal_scan="signal_scan_v01D.root"
+    signal_scan="signal_scan_exclusiv_v02D.root"
     rho=-0.0
     #fillDatacards(Scan.T5gg)
     fillDatacards(Scan.T5Wg)
