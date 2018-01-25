@@ -27,6 +27,8 @@ enum Scan_t
    T5Wg,   
    T6Wg,
    T6gg,  
+   GGM_M1_M2,
+   GGM_M1_M3,
 };
 
 
@@ -40,7 +42,10 @@ std::map<int,float> getXsecs(Scan_t scan)
    else if (scan==T5gg) path += "/xsec_gluglu.csv";
    else if (scan==T6Wg) path += "/xsec_sqsq.csv";   //squarks! update
    else if (scan==T6gg) path += "/xsec_sqsq.csv";   //squarks! update
-   unsigned const nCol=scan==GGM ? 4 : 3;
+   else if (scan==GGM_M1_M2) path += "/xsec_GGM_M1_M2.txt";
+   else if (scan==GGM_M1_M3) path += "/xsec_GGM_M1_M3.txt";
+   std::cout<<path<<std::endl;
+   unsigned const nCol=scan==GGM||scan==GGM_M1_M2||scan==GGM_M1_M3 ? 4 : 3;
    // T5Wg also contains gg, WW -> actually only 1/2 of generated events
    // instead, multiply xsec by 2
    int const multiplier= 1;
@@ -59,6 +64,8 @@ std::map<int,float> getXsecs(Scan_t scan)
             m_M_XS[(int)values[0]*100000+(int)values[1]]=values[2]/1000.; // convert to pb
          } else if (scan==TChiWg || scan==TChiNg) {
             m_M_XS[(int)values[0]]=values[1]/1000.; // convert to pb
+         } else if (scan==GGM_M1_M2 || scan==GGM_M1_M3) {
+            m_M_XS[(int)values[0]*100000+(int)values[1]]=values[2];
          } else {
             m_M_XS[(int)values[0]]=values[1]*multiplier;
          }
@@ -67,7 +74,7 @@ std::map<int,float> getXsecs(Scan_t scan)
    return m_M_XS;
 }
 
-std::string getModelName(Scan_t scan, UShort_t signal_m1, UShort_t signal_m2 = 0, UShort_t signal_nBinos = 0)
+std::string getModelName(Scan_t scan, UShort_t signal_m1, UShort_t signal_m2 = 0)
 {
    std::string modelName = "";
    if (scan==TChiWg)  modelName = "TChiWG_";
@@ -76,7 +83,9 @@ std::string getModelName(Scan_t scan, UShort_t signal_m1, UShort_t signal_m2 = 0
    else if (scan==T5gg)  modelName = "T5gg_";
    else if (scan==T6Wg)  modelName = "T6Wg_";
    else if (scan==T6gg)  modelName = "T6gg_";
-   else if (scan==GGM)  modelName = "GGM_";   
+   else if (scan==GGM)  modelName = "GGM_";
+   else if (scan==GGM_M1_M2)  modelName = "GGM_M1_M2_";
+   else if (scan==GGM_M1_M3)  modelName = "GGM_M1_M3_";
    if (signal_m1) modelName += std::to_string(signal_m1);
    if (signal_m2) modelName += "_" + std::to_string(signal_m2);
   
@@ -86,6 +95,7 @@ std::string getModelName(Scan_t scan, UShort_t signal_m1, UShort_t signal_m2 = 0
 
 std::pair<int,int> getMasses(std::string fileName,Scan_t scan)
 {
+   std::cout<<fileName<<std::endl;
    std::smatch m;
    std::regex e;
   // if (scan==GGM)  e=".*_M2_(.*)_M1_(.*)\\.root";
@@ -96,6 +106,8 @@ std::pair<int,int> getMasses(std::string fileName,Scan_t scan)
    else if (scan==T5gg) e="T5.*_(.*)_(.*)";
    else if (scan==T6Wg) e="T6.*_(.*)_(.*)";
    else if (scan==T6gg) e="T6.*_(.*)_(.*)";
+   else if (scan==GGM_M1_M2) e="GGM_M1_M2_(.*)_(.*)";
+   else if (scan==GGM_M1_M3) e="GGM_M1_M3_(.*)_(.*)";
 
    std::regex_search (fileName,m,e);
    if (scan==TChiWg || scan ==TChiNg) {
@@ -109,7 +121,7 @@ std::pair<int,int> getMasses(std::string fileName,Scan_t scan)
    return std::make_pair(std::stoi(m[1]),std::stoi(m[2]));
 }
 
-void runScan_80X(Scan_t scan)
+void runScan_80X(Scan_t scan,bool exclusive)
 {
    std::map<int,float> mXsecs=getXsecs(scan);
    TString fname=cfg.dataBasePath;
@@ -120,6 +132,8 @@ void runScan_80X(Scan_t scan)
    else if (scan==T6Wg) fname+="SMS-T6Wg.root";
    else if (scan==T6gg) fname+="SMS-T6gg.root";
    else if (scan==GGM) fname+="GGM.root";
+   else if (scan==GGM_M1_M2) fname+="GGM_GravitinoLSP_M1-200to1500_M2-200to1500.root";
+   else if (scan==GGM_M1_M3) fname+="GGM_GravitinoLSP_M1-50to1500_M3-1000to2500.root";
    else debug<<"unsupported scan!";
    std::map<std::string,TH1F> hSR;
    std::map<std::string,TH1F> hCR;
@@ -171,7 +185,9 @@ void runScan_80X(Scan_t scan)
    int iBeforeVeto=0;
 
    Long64_t iEvents = tree->GetEntries();
+   int processEvents=cfg.processFraction*iEvents;
    for (int iEvent=0; iEvent<iEvents; iEvent++){
+      if (iEvent>processEvents) break;
       if (iEvent%(iEvents/100)==0) {io::log*"."; io::log.flush(); };
       tree->GetEvent(iEvent);
       model = getModelName(scan, signal_m1, signal_m2);
@@ -286,7 +302,7 @@ void runScan_80X(Scan_t scan)
          hISRWeight[model+"_afterErr"].Fill(-1,fEventWeightError);
          continue;
       }
-
+      
       std::vector<tree::Photon const*> const &pho = lPho;
       float const phoPt=pho[0]->p.Pt(); // set *before* wCalc->get() !
       int const Nph=pho.size();
@@ -423,9 +439,11 @@ void runScan_80X(Scan_t scan)
          emhtVeto = true;
       }
       //Apply Vetos for GGM combination
-      if (leptoVeto == true || diphotonVeto == true || emhtVeto == true) continue;
+      if(exclusive){
+         if (leptoVeto == true || diphotonVeto == true || emhtVeto == true) continue;
+      }
 
-
+      
       // jet related
       std::vector<tree::Jet> cjets=phys::getCleanedJets(*jets);
 
@@ -490,7 +508,7 @@ void runScan_80X(Scan_t scan)
          if (std::abs(dPhi) < std::abs(dPhiMETnearJet))
             dPhiMETnearJet=dPhi;
       }
-
+      
       // nearest jet or photon
       float dPhiMETnearJetPh=dPhiMETnearJet; // nearest jet or photon
       for (auto const &ph: pho){
@@ -499,14 +517,13 @@ void runScan_80X(Scan_t scan)
             dPhiMETnearJetPh=dPhi;
       }
       hPresel[model].Fill(dPhiMETnearJetPh,fEventWeight);
-      if (scan == GGM){
+      if (scan == GGM || scan == GGM_M1_M2 || scan == GGM_M1_M3){
          hPresel[model+"_mu2"].Fill(dPhiMETnearJetPh,fEventWeight);
          hPresel[model+"_mu05"].Fill(dPhiMETnearJetPh,fEventWeight);
       } else {
          hPresel[model+"_mu2"].Fill(dPhiMETnearJetPh,fEventWeight*w_pdf->at(4));
          hPresel[model+"_mu05"].Fill(dPhiMETnearJetPh,fEventWeight*w_pdf->at(8));
       }
-      
       if (MET->p.Pt()>100 && MT>100) {
          if (MET->p.Pt()<300 || MT<300) {
             hCR[model].Fill(dPhiMETnearJetPh,fEventWeight);
@@ -528,7 +545,7 @@ void runScan_80X(Scan_t scan)
          hSR[model].Fill(STg,fEventWeight);
          hSR[model+"SRErrISR"].Fill(STg,fEventWeightError);
          hSR[model+"_gen"].Fill(genSTg,fEventWeight);
-         if (scan == GGM){
+         if (scan == GGM || scan == GGM_M1_M2 || scan == GGM_M1_M3){
             hSR[model+"_mu2"].Fill(STg,fEventWeight);
             hSR[model+"_mu05"].Fill(STg,fEventWeight);            
          } else {
@@ -561,11 +578,13 @@ void runScan_80X(Scan_t scan)
    else if (scan==T5gg) sScan="T5gg";
    else if (scan==T6Wg) sScan="T6Wg";
    else if (scan==T6gg) sScan="T6gg";
+   else if (scan==GGM_M1_M2)  sScan = "GGM_M1_M2";
+   else if (scan==GGM_M1_M3)  sScan = "GGM_M1_M3";
 
  //  for (auto &it: PVlowSR) std::cout << it.first << " : " << ((1.*it.second/PVlowAll[it.first]) - (1.*PVhighSR[it.first]/PVhighAll[it.first]))*100/2. << std::endl; //balanced deviation because of PU in percent
 
    TString fill_line;
-
+   
    double uncert_PU = 0.;
    for (auto &it: PVlowSR) {
       uncert_PU = fabs(((1.*it.second/PVlowAll[it.first]) - (1.*PVhighSR[it.first]/PVhighAll[it.first]))*100/2.);
@@ -574,15 +593,28 @@ void runScan_80X(Scan_t scan)
    }
     
    io::RootFileReader dataReader(TString::Format("histograms_%s.root",cfg.treeVersion.Data()),TString::Format("danilo_distributions%.1f",cfg.processFraction*100));
-   TH1F hData(*dataReader.read<TH1F>("pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh/SinglePhoton"));
+   std::string path;
+   if (exclusive){
+      path="pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh/SinglePhoton";
+   }
+   else {
+      path="pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/absphiMETnJetPh/SinglePhoton";
+   }
+   TH1F hData(*dataReader.read<TH1F>(path));
    float const nData=hData.Integral();
 
    std::map<TString,TGraph2D> grAcc;
    std::map<TString,TGraph2D> grScaleUnc;
    std::map<TString,TGraph2D> grCont;
 
-
-   io::RootFileSaver saver_hist(TString::Format("signal_scan_exclusiv_%s.root",cfg.treeVersion.Data()),"",false);
+   std::string out;
+   if (exclusive){
+      out=TString::Format("signal_scan_exclusiv_%s.root",cfg.treeVersion.Data());
+   }
+   else {
+      out=TString::Format("signal_scan_inclusiv_%s.root",cfg.treeVersion.Data());
+   }
+   io::RootFileSaver saver_hist(out,"",false);
    TString sVar;
    
    for (auto const &map: hSR) {
@@ -598,6 +630,20 @@ void runScan_80X(Scan_t scan)
       } else if (model.find("T6gg")!=std::string::npos) {
          hcf=(TH1F*)file.Get(("TreeWriter/hCutFlowT6Wg"+model.substr(model.find('_'))).c_str());
          sScan="T6gg";
+      } else if (model.find("GGM_M1_M2")!=std::string::npos) {
+         std::smatch m;
+         std::regex e;
+         e="GGM_M1_M2_(.*)_(.*)";
+         std::regex_search (model,m,e);
+         hcf=(TH1F*)file.Get(("TreeWriter/hCutFlowGGM_M1"+(std::string)m[1]+"_M2"+(std::string)m[2]).c_str());
+         sScan="GGM_M1_M2";
+      } else if (model.find("GGM_M1_M3")!=std::string::npos) {
+         std::smatch m;
+         std::regex e;
+         e="GGM_M1_M3_(.*)_(.*)";
+         std::regex_search (model,m,e);
+         hcf=(TH1F*)file.Get(("TreeWriter/hCutFlowGGM_M1"+(std::string)m[1]+"_M3"+(std::string)m[2]).c_str());
+         sScan="GGM_M1_M3";
       } else if (model.find("GGM")!=std::string::npos) {
          hcf=(TH1F*)file.Get(("TreeWriter/hCutFlowGMSB"+model.substr(model.find('_'))).c_str());
          sScan="GGM";         
@@ -642,7 +688,7 @@ void runScan_80X(Scan_t scan)
       int m ;
       float xs;
       
-      if (scan == GGM){
+      if (scan == GGM || scan == GGM_M1_M2 || scan == GGM_M1_M3){
          m=masses.first*100000 + masses.second;
          xs=mXsecs[m];
       }
@@ -670,14 +716,14 @@ void runScan_80X(Scan_t scan)
       hSR[model+"_gen"].Scale(cfg.trigger_eff_Ph);
       hCR[model].Scale(cfg.trigger_eff_Ph);
       
-      sVar = "pre_ph165/c_MET300/MT300/STg";
+      sVar = sScan+"/pre_ph165/c_MET300/MT300/STg";
       saver_hist.save(hSR[model],sVar+"/"+model);
       saver_hist.save(hSR[model+"SRErrISR"],sVar+"/"+model+"SRErrISR");  
       saver_hist.save(hSR[model+"_gen"],sVar+"/"+model+"_gen");
       
-      sVar = "EWKinoPairPt";      
+      sVar = sScan+"/EWKinoPairPt";      
       saver_hist.save(hISRWeight[model+"_before"],sVar+"/"+model+"_before");
-      sVar = "pre_ph165/c_MET300/MT300/STg600/EWKinoPairPt";  
+      sVar = sScan+"/pre_ph165/c_MET300/MT300/STg600/EWKinoPairPt";  
       saver_hist.save(hISRWeight[model+"_after"],sVar+"/"+model+"_after");
       saver_hist.save(hISRWeight[model+"_afterErr"],sVar+"/"+model+"_afterErr");
 
@@ -696,18 +742,18 @@ void runScan_80X(Scan_t scan)
 
       // contamination
       hCR[model].Scale(1./nData);
-      sVar="pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/exclusiv";
+      sVar=sScan+"/pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh";
       saver_hist.save(hCR[model],sVar+"/"+model);
       grCont[sScan].SetPoint(grCont[sScan].GetN(),x,y,hCR[model].Integral());
    }
    file.Close();
 
    for (auto const& p: grAcc) {
-      sVar = "pre_ph165/c_MET300/MT300/STg/exclusiv";
+      sVar = sScan+"/pre_ph165/c_MET300/MT300/STg";
       saver_hist.save(grAcc[p.first],sVar+"/"+p.first+"_acceptance");
       saver_hist.save(grScaleUnc[p.first],sVar+"/"+p.first+"_scaleUnc");
 
-      sVar="pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/exclusiv";
+      sVar=sScan+"/pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh";
       saver_hist.save(grCont[p.first],sVar+"/"+p.first+"_contamination");
    }
 }
@@ -716,10 +762,12 @@ extern "C"
 void run()
 {
  //   runScan_80X(TChiWg);
- //   runScan_80X(TChiNg);
-    runScan_80X(T5Wg);
- //   runScan_80X(T5gg);
+    //~ runScan_80X(TChiNg);
+    runScan_80X(T5Wg,false);
+    //~ runScan_80X(T5gg);
  //   runScan_80X(T6Wg);
  //   runScan_80X(T6gg);
-  //runScan_80X(GGM);
+  //~ runScan_80X(GGM);
+   //~ runScan_80X(GGM_M1_M2,true);
+   //~ runScan_80X(GGM_M1_M3,false);
 }

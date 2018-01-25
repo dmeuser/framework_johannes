@@ -29,7 +29,7 @@ static Config const &cfg=Config::get();
 
 int plot(){
 	
-	io::RootFileSaver saver("danilo/plots.root",TString::Format("danilo_plot_combined%.1f/%s",cfg.processFraction*100,"Limits"));
+	io::RootFileSaver saver("plots.root",TString::Format("danilo_plot_combined%.1f/%s",cfg.processFraction*100,"Limits"));
 	TCanvas can;
 	
 	TFile file_1("../input/T5Wg_limits_mock/limits_T5Wg_johannes.root","read");
@@ -113,6 +113,6 @@ int plot_exclusive(){
 extern "C"
 
 void run(){
-	//~ plot();
+	plot();
 	plot_exclusive();
 }

@@ -233,6 +233,9 @@ void run()
    ADD_HIST("pre_ph165/c_MET300/MT300/exclusiv/STg"   ,";STg;EventsBIN"           ,2000,0,2000);
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh",";|#Delta#phi(p_{T}^{miss},nearest jet/#gamma)| (radians);EventsBIN",50,0,5);  
    
+   ADD_HIST("pre_ph165/c_MET300/MT300/inclusiv/STg"   ,";STg;EventsBIN"           ,2000,0,2000);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/absphiMETnJetPh",";|#Delta#phi(p_{T}^{miss},nearest jet/#gamma)| (radians);EventsBIN",50,0,5);  
+   
    //Files for eventnumbers of overlapping regions for combination
    std::string outdir (CMAKE_SOURCE_DIR);
    outdir = outdir + "output/events_overlap/";
@@ -678,6 +681,7 @@ void run()
                         if (isData && pass==pass_normal) {exclusive << *runNo << ":" << *lumNo << ":" << *evtNo << std::endl;}
                      }
                   }
+                  hs.fill("pre_ph165/c_MET300/MT300/inclusiv/STg",STg);
                   if (emhtVeto == 0 && leptoVeto == 0 && diphotonVeto == 0) {
                      hs.fill("pre_ph165/c_MET300/MT300/exclusiv/STg",STg);
                   }
@@ -685,6 +689,11 @@ void run()
                if (MT > 100 && met > 100 && emhtVeto == 0 && leptoVeto == 0 && diphotonVeto == 0){
                   if (met < 300 || MT < 300){
                      hs.fill("pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
+                  }
+               }
+               if (MT > 100 && met > 100){
+                  if (met < 300 || MT < 300){
+                     hs.fill("pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
                   }
                }
                      
@@ -826,6 +835,8 @@ void run()
    //for final datacards
       {"pre_ph165/c_MET300/MT300/exclusiv/",{"STg"}},
       {"pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/",{"absphiMETnJetPh"}},
+      {"pre_ph165/c_MET300/MT300/inclusiv/",{"STg"}},
+      {"pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/",{"absphiMETnJetPh"}},
    };
    
    for (auto const &sPresel_vVars:msPresel_vVars){
@@ -872,6 +883,8 @@ void run()
       //for final datacards
       {"pre_ph165/c_MET300/MT300/exclusiv/",{"STg"}},
       {"pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/",{"absphiMETnJetPh"}},
+      {"pre_ph165/c_MET300/MT300/inclusiv/",{"STg"}},
+      {"pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/",{"absphiMETnJetPh"}},
    };
    saveHistograms(msPresel_vVars,saver_hist,hs,hs_pix,true);
    

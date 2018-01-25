@@ -45,6 +45,8 @@ namespace hist
       void fill(TString const &varName,float x); // 1d
       void fill(TString const &varName,float x,float y); // 2d   
       void fillweight(TString const &varName,float x,float w);
+      void fillbin(TString const &varName,TString const &binName);
+      void fillbinFake(TString const &varName,TString const &binName);
       void count(TString const &varName);
       void scaleLumi(); // scales MC with lumi weight and trigger efficiency. Data is ignored.
       void mergeOverflow(bool includeUnderflow=true); // add the overflow to the last bin (and underflow to first)
@@ -87,6 +89,10 @@ namespace hist
    void Histograms<TH1F>::addHist(TString const &varName,TString const &title, std::vector<float> edges_x, std::vector<float> widths_x, std::vector<float> edges_y, std::vector<float> widths_y)=delete;
    template <>
    void Histograms<TH2F>::fill(TString const&,float)=delete;
+   template <>
+   void Histograms<TH2F>::fillbin(TString const &varName,TString const &binName)=delete;
+   template <>
+   void Histograms<TH2F>::fillbinFake(TString const &varName,TString const &binName)=delete;
    template <>
    void Histograms<TH1F>::fill(TString const&,float,float)=delete;
    //~ template <>

@@ -5,14 +5,15 @@ from distutils import spawn
 from array import array
 from operator import add,sub
 import ROOT as rt
+import numpy as np
 
 backgrounds=["GJ","TTcomb","Vg","diboson","efake"]
 
 class Scan:
-    T5gg,T5Wg,T6Wg,T6gg,GGM,TChiWg,TChiNg=range(7)
+    T5gg,T5Wg,T6Wg,T6gg,GGM,TChiWg,TChiNg,GGM_M1_M2,GGM_M1_M3=range(9)
 
 def prepareDatacard(obs,count,estat,esyst,eISR,correlated,mcUncertainties,pointName,sScan):
-    dataCardPath=outdir+"datacards/exclusiv/"+sScan+"/datacard_%s.txt"%pointName
+    dataCardPath=outdir+"datacards/"+selection+"/"+sScan+"/datacard_%s.txt"%pointName
     nBins=len(obs)
     card="# "+pointName
     card+="""
@@ -155,11 +156,11 @@ observation          """%nBins
         f.write(card)
     return dataCardPath
 
-def getSignalYield(point):
+def getSignalYield(point,sScan):
     f=rt.TFile(outdir+signal_scan,"read")
-    hist=f.Get("pre_ph165/c_MET300/MT300/STg/"+point)
-    hist_gen=f.Get("pre_ph165/c_MET300/MT300/STg/"+point+"_gen")
-    hist_ISR=f.Get("pre_ph165/c_MET300/MT300/STg/"+point+"SRErrISR")
+    hist=f.Get(sScan+"/pre_ph165/c_MET300/MT300/STg/"+point)
+    hist_gen=f.Get(sScan+"/pre_ph165/c_MET300/MT300/STg/"+point+"_gen")
+    hist_ISR=f.Get(sScan+"/pre_ph165/c_MET300/MT300/STg/"+point+"SRErrISR")
     if math.isnan(hist.Integral()):
         # input tree for model was bad->Ngen=0->weight=inf
         f.Close()
@@ -184,10 +185,9 @@ def getSignalYield(point):
     f.Close()
     return sigYield,statErr,metErr,ISRErr
 
-def getSignalContamination(point):
+def getSignalContamination(point,sScan):
     f=rt.TFile(outdir+signal_scan,"read")
-    #~ hist=f.Get("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/"+point)
-    hist=f.Get("pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/exclusiv/"+point)
+    hist=f.Get(sScan+"/pre_ph165/c_MET100/MT100/METl300vMTl300/absphiMETnJetPh/"+point)
     c=hist.Integral()
     if math.isnan(c):
         # input tree for model was bad->Ngen=0->weight=inf
@@ -218,6 +218,8 @@ def getMasses(point,scan):
     elif scan==Scan.GGM:    pattern=".*_M2_(.*)_M1_(.*)"
     elif scan==Scan.TChiWg: pattern="TChiWG_(.*)"
     elif scan==Scan.TChiNg: pattern="TChiNG_(.*)"
+    elif scan==Scan.GGM_M1_M2: pattern="GGM_M1_M2_(.*)_(.*)"
+    elif scan==Scan.GGM_M1_M3: pattern="GGM_M1_M3_(.*)_(.*)"
       
     m=re.search(pattern,point)
     masses=[]
@@ -246,6 +248,8 @@ def fillDatacards(scan):
     elif scan==Scan.GGM:    scanFile+="GGM_WinoBino_scan.txt"
     elif scan==Scan.TChiWg: scanFile+="TChiWg_scan.txt"
     elif scan==Scan.TChiNg: scanFile+="TChiNg_scan.txt"
+    elif scan==Scan.GGM_M1_M2: scanFile+="GGM_M1_M2_scan.txt"
+    elif scan==Scan.GGM_M1_M3: scanFile+="GGM_M1_M3_scan.txt"
     
     sScan="unkown_scan"
     if scan==Scan.T5gg:   sScan="T5gg"
@@ -255,6 +259,8 @@ def fillDatacards(scan):
     elif scan==Scan.GGM:    sScan="GGM"
     elif scan==Scan.TChiWg: sScan="TChiWg"
     elif scan==Scan.TChiNg: sScan="TChiNg"
+    elif scan==Scan.GGM_M1_M2: sScan="GGM_M1_M2"
+    elif scan==Scan.GGM_M1_M3: sScan="GGM_M1_M3"
     
     count={}
     estat={}
@@ -263,15 +269,23 @@ def fillDatacards(scan):
     f=rt.TFile(outdir+"yields.root","read")
     for bkg in backgrounds:
         #~ hist=f.Get("pre_ph165/c_MET300/MT300/STg/"+bkg)
-        hist=f.Get("pre_ph165/c_MET300/MT300/exclusiv/STg/"+bkg)
+        hist=f.Get("pre_ph165/c_MET300/MT300/"+selection+"/STg/"+bkg)
         count[bkg]=[hist.GetBinContent(i) for i in range(1,5)]
+        # deal with zero bin content
+        for i in range(1,5):
+            if count[bkg][i-1]==0:
+                count[bkg][i-1]=-1
         # subtract "additional" 1 from count index, because 1st bin is already left out
         estat[bkg]=[1+hist.GetBinError(i)/count[bkg][i-1] for i in range(1,5)]
         #~ hist=f.Get("pre_ph165/c_MET300/MT300/STg/"+bkg+"_esyst")
-        hist=f.Get("pre_ph165/c_MET300/MT300/exclusiv/STg/"+bkg+"_esyst")
+        hist=f.Get("pre_ph165/c_MET300/MT300/"+selection+"/STg/"+bkg+"_esyst")
         esyst[bkg]=[1+hist.GetBinContent(i)/count[bkg][i-1] for i in range(1,5)]
+        # remove negative count used for proper error calculation
+        for i in range(1,5):
+            if count[bkg][i-1]==-1:
+                count[bkg][i-1]=0
     #~ hist=f.Get("pre_ph165/c_MET300/MT300/STg/data")
-    hist=f.Get("pre_ph165/c_MET300/MT300/exclusiv/STg/data")
+    hist=f.Get("pre_ph165/c_MET300/MT300/"+selection+"/STg/data")
     obs=[int(hist.GetBinContent(i)) for i in range(1,5)]
     f.Close()
 
@@ -289,15 +303,20 @@ def fillDatacards(scan):
             if scan==Scan.T5gg or scan==Scan.T5Wg or scan==Scan.T6Wg or scan==Scan.T6gg:
                 m2,m1=getMasses(p,scan)
                 #if m2<1100: continue
+            elif scan==Scan.GGM_M1_M2 or scan==Scan.GGM_M1_M3:
+                m1,m2=getMasses(p,scan)
             points.append(p)
 
     for i,point in enumerate(points):
-        print point,
-        m2,m1=getMasses(point,scan)
+        print point
+        if scan==Scan.GGM_M1_M2 or scan==Scan.GGM_M1_M3:
+            m1,m2=getMasses(point,scan)
+        else:
+            m2,m1=getMasses(point,scan)
         key=m2
         if scan==Scan.GGM: key=m2*100000+m1
-        sigYield=getSignalYield(point)
-        contamin=getSignalContamination(point)
+        sigYield=getSignalYield(point,sScan)
+        contamin=getSignalContamination(point,sScan)
         if not sigYield:
             print " broken!"
             continue # broken point
@@ -324,19 +343,20 @@ def fillDatacards(scan):
 
 
 if __name__ == '__main__':
+    #~ selection="exclusiv"
+    selection="inclusiv"
     basedir="../"
     outdir=basedir+"output/"
-    #signal_scan="signal_scan_v19.root"
-    #~ signal_scan="signal_scan_v01D.root"
-    signal_scan="signal_scan_exclusiv_v02D.root"
+    signal_scan="signal_scan_"+selection+"_v03D.root"
     rho=-0.0
-    #fillDatacards(Scan.T5gg)
-    fillDatacards(Scan.T5Wg)
-    """
-    fillDatacards(Scan.T6Wg)
-    fillDatacards(Scan.T6gg)
-    fillDatacards(Scan.GGM)
-    fillDatacards(Scan.TChiWg)
-    fillDatacards(Scan.TChiNg)
-    """
+    #~ fillDatacards(Scan.T5gg)
+    #~ fillDatacards(Scan.T5Wg)
+    #~ fillDatacards(Scan.T6Wg)
+    #~ fillDatacards(Scan.T6gg)
+    #~ fillDatacards(Scan.GGM)
+    #~ fillDatacards(Scan.TChiWg)
+    #~ fillDatacards(Scan.TChiNg)
+    #~ fillDatacards(Scan.GGM_M1_M2)
+    fillDatacards(Scan.GGM_M1_M3)
+
 

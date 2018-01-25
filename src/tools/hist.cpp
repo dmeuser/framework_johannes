@@ -96,6 +96,20 @@ void hist::Histograms<HIST>::fill(TString const &varName,float x)
 }
 
 template <class HIST>
+void hist::Histograms<HIST>::fillbin(TString const &varName,TString const &binName)
+{
+   if (mmH_.count(varName)<1) {debug*varName>>"unkown"; throw;}
+   mmH_[varName][sCurrentSample_].Fill(binName,fWeight_);
+}
+
+template <class HIST>
+void hist::Histograms<HIST>::fillbinFake(TString const &varName,TString const &binName)
+{
+   if (mmH_.count(varName)<1) {debug*varName>>"unkown"; throw;}
+   mmH_[varName][sCurrentSample_].Fill(binName,0);
+}
+
+template <class HIST>
 void hist::Histograms<HIST>::fillweight(TString const &varName,float x,float w)
 {
    if (mmH_.count(varName)<1) {debug*varName>>"unkown"; throw;}

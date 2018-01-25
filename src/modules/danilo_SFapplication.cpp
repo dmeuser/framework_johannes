@@ -217,7 +217,7 @@ void plot(TString sSelection,TString sVar,int iRebin,
 {
    bool const showData=(plotMode!=SR_BLIND && plotMode!=PRE);
    bool const showSignal=(plotMode!=CR && plotMode!=VR);
-   io::RootFileReader histReader(TString::Format("danilo_histograms_%s.root",cfg.treeVersion.Data()),TString::Format("danilo_distributions%.1f",cfg.processFraction*100));
+   io::RootFileReader histReader(TString::Format("histograms_%s.root",cfg.treeVersion.Data()),TString::Format("danilo_distributions%.1f",cfg.processFraction*100));
 
    TString saveName=sSelection+sVar;
 
@@ -723,7 +723,7 @@ void run()
    plot("pre_ph165/VR_SR/","phoEta",{-2.6,2.6},{0.57},VR);
    plot("pre_ph165/VR_SR/","nEle",{0,5},{1},VR);
    plot("pre_ph165/VR_SR/","nMu",{0,5},{1},VR);
-   plot("pre_ph165/VR_SR/","lepPt",{0,800},{80},VR);
+   //~ plot("pre_ph165/VR_SR/","lepPt",{0,800},{80},VR);
    plot("pre_ph165/VR_SR/","nPho",{0,5},{1},VR);
    
    plot("pre_ph165/VR_SR/noHTG/","HTG",{0,2400},{240},VR);
@@ -765,5 +765,7 @@ void run()
    
    plot("pre_ph165/c_MET300/MT300/STg600/exclusive/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
    
+   //needed for yields
    plot("pre_ph165/c_MET300/MT300/exclusiv/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
+   plot("pre_ph165/c_MET300/MT300/inclusiv/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
 }
