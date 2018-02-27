@@ -768,4 +768,7 @@ void run()
    //needed for yields
    plot("pre_ph165/c_MET300/MT300/exclusiv/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
    plot("pre_ph165/c_MET300/MT300/inclusiv/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
+   plot("pre_ph165/c_MET300/MT300/htgVeto/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
+   plot("pre_ph165/c_MET300/MT300/leptonVeto/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
+   plot("pre_ph165/c_MET300/MT300/diphotonVeto/","STg",{600,800,1000,1300,1600},{200,200,300,300},SR);
 }

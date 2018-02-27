@@ -234,8 +234,21 @@ void run()
    ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh",";|#Delta#phi(p_{T}^{miss},nearest jet/#gamma)| (radians);EventsBIN",50,0,5);  
    
    ADD_HIST("pre_ph165/c_MET300/MT300/inclusiv/STg"   ,";STg;EventsBIN"           ,2000,0,2000);
-   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/absphiMETnJetPh",";|#Delta#phi(p_{T}^{miss},nearest jet/#gamma)| (radians);EventsBIN",50,0,5);  
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/absphiMETnJetPh",";|#Delta#phi(p_{T}^{miss},nearest jet/#gamma)| (radians);EventsBIN",50,0,5);
    
+   ADD_HIST("pre_ph165/c_MET300/MT300/htgVeto/STg"   ,";STg;EventsBIN"           ,2000,0,2000);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/htgVeto/absphiMETnJetPh",";|#Delta#phi(p_{T}^{miss},nearest jet/#gamma)| (radians);EventsBIN",50,0,5);
+   
+   ADD_HIST("pre_ph165/c_MET300/MT300/leptonVeto/STg"   ,";STg;EventsBIN"           ,2000,0,2000);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/leptonVeto/absphiMETnJetPh",";|#Delta#phi(p_{T}^{miss},nearest jet/#gamma)| (radians);EventsBIN",50,0,5);
+   
+   ADD_HIST("pre_ph165/c_MET300/MT300/diphotonVeto/STg"   ,";STg;EventsBIN"           ,2000,0,2000);
+   ADD_HIST("pre_ph165/c_MET100/MT100/METl300vMTl300/diphotonVeto/absphiMETnJetPh",";|#Delta#phi(p_{T}^{miss},nearest jet/#gamma)| (radians);EventsBIN",50,0,5);  
+   
+   //Overlap in validation region
+   ADD_HIST("pre_ph165/VR/overlap"   ,";;EventsBIN"           ,5,-0.5,4.5);
+
+
    //Files for eventnumbers of overlapping regions for combination
    std::string outdir (CMAKE_SOURCE_DIR);
    outdir = outdir + "output/events_overlap/";
@@ -351,6 +364,7 @@ void run()
          }
          //~ float const HT=phys::computeHT(cjets);
          
+
          TVector3 vecHT, vecGammaHT;
          bool clean_MET = true;
          
@@ -405,6 +419,7 @@ void run()
          for (tree::Muon const &mu: *muons) {
     //        if (mu.p.Pt()<20) continue;
             if (mu.p.Eta()>2.4) continue;
+
             if (mu.isTight && mu.rIso<0.15) Nmu++;
          }
          //~ const int Nlepton=Nele+Nmu;
@@ -681,22 +696,47 @@ void run()
                         if (isData && pass==pass_normal) {exclusive << *runNo << ":" << *lumNo << ":" << *evtNo << std::endl;}
                      }
                   }
+                  
                   hs.fill("pre_ph165/c_MET300/MT300/inclusiv/STg",STg);
+                  
                   if (emhtVeto == 0 && leptoVeto == 0 && diphotonVeto == 0) {
                      hs.fill("pre_ph165/c_MET300/MT300/exclusiv/STg",STg);
                   }
-               }
-               if (MT > 100 && met > 100 && emhtVeto == 0 && leptoVeto == 0 && diphotonVeto == 0){
-                  if (met < 300 || MT < 300){
-                     hs.fill("pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
+                  
+                  if (emhtVeto == 0) {
+                     hs.fill("pre_ph165/c_MET300/MT300/htgVeto/STg",STg);
+                  }
+                  
+                  if (leptoVeto == 0) {
+                     hs.fill("pre_ph165/c_MET300/MT300/leptonVeto/STg",STg);
+                  }
+                  
+                  if (diphotonVeto == 0) {
+                     hs.fill("pre_ph165/c_MET300/MT300/diphotonVeto/STg",STg);
                   }
                }
                if (MT > 100 && met > 100){
                   if (met < 300 || MT < 300){
+                     
                      hs.fill("pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
+                     
+                     if (emhtVeto == 0 && leptoVeto == 0 && diphotonVeto == 0){
+                        hs.fill("pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
+                     }
+                     
+                     if (emhtVeto == 0) {
+                        hs.fill("pre_ph165/c_MET100/MT100/METl300vMTl300/htgVeto/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
+                     }
+                     
+                     if (leptoVeto == 0) {
+                        hs.fill("pre_ph165/c_MET100/MT100/METl300vMTl300/leptonVeto/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
+                     }
+                     
+                     if (diphotonVeto == 0) {
+                        hs.fill("pre_ph165/c_MET100/MT100/METl300vMTl300/diphotonVeto/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
+                     }
                   }
                }
-                     
                
                if (met > 100 && MT > 100) {
                   //Fill hists for background check in cut variables
@@ -778,6 +818,15 @@ void run()
                         hs.fill("pre_ph165/VR/exclusiv/STG",STg);
                         hs.fill("pre_ph165/VR/exclusiv/absphiMETnJetPh",std::abs(dPhiMETnearJetPh));
                      }
+                     
+                     //Overlap in validation region
+                     if (STg <600) {
+                        hs.fill("pre_ph165/VR/overlap",0);
+                        if (emhtVeto == true) hs.fill("pre_ph165/VR/overlap",1);
+                        if (leptoVeto == true) hs.fill("pre_ph165/VR/overlap",2);
+                        if (diphotonVeto == true) hs.fill("pre_ph165/VR/overlap",3);
+                        if (leptoVeto == false && diphotonVeto == false && emhtVeto == false) hs.fill("pre_ph165/VR/overlap",4);
+                     }
                   }
                }
                
@@ -837,6 +886,12 @@ void run()
       {"pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/",{"absphiMETnJetPh"}},
       {"pre_ph165/c_MET300/MT300/inclusiv/",{"STg"}},
       {"pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/",{"absphiMETnJetPh"}},
+      {"pre_ph165/c_MET300/MT300/htgVeto/",{"STg"}},
+      {"pre_ph165/c_MET100/MT100/METl300vMTl300/htgVeto/",{"absphiMETnJetPh"}},
+      {"pre_ph165/c_MET300/MT300/leptonVeto/",{"STg"}},
+      {"pre_ph165/c_MET100/MT100/METl300vMTl300/leptonVeto/",{"absphiMETnJetPh"}},
+      {"pre_ph165/c_MET300/MT300/diphotonVeto/",{"STg"}},
+      {"pre_ph165/c_MET100/MT100/METl300vMTl300/diphotonVeto/",{"absphiMETnJetPh"}},
    };
    
    for (auto const &sPresel_vVars:msPresel_vVars){
@@ -885,6 +940,12 @@ void run()
       {"pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/",{"absphiMETnJetPh"}},
       {"pre_ph165/c_MET300/MT300/inclusiv/",{"STg"}},
       {"pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/",{"absphiMETnJetPh"}},
+      {"pre_ph165/c_MET300/MT300/htgVeto/",{"STg"}},
+      {"pre_ph165/c_MET100/MT100/METl300vMTl300/htgVeto/",{"absphiMETnJetPh"}},
+      {"pre_ph165/c_MET300/MT300/leptonVeto/",{"STg"}},
+      {"pre_ph165/c_MET100/MT100/METl300vMTl300/leptonVeto/",{"absphiMETnJetPh"}},
+      {"pre_ph165/c_MET300/MT300/diphotonVeto/",{"STg"}},
+      {"pre_ph165/c_MET100/MT100/METl300vMTl300/diphotonVeto/",{"absphiMETnJetPh"}},
    };
    saveHistograms(msPresel_vVars,saver_hist,hs,hs_pix,true);
    
@@ -981,4 +1042,18 @@ void run()
    gPad->SetLeftMargin(0.22);
    overlap_HTG_ratio.Draw("col TEXT");
    saver.save(can_2d,"Overlap_2d_HTGbinned_ratio",true,false);
+   
+   //Plot overlap for validation region
+   can.cd();
+   TH1F *overlapVR = hs.getHistogram("pre_ph165/VR/overlap","SinglePhoton");
+   overlapVR->Draw("hist");
+   overlapVR->GetXaxis()->SetBinLabel(1,"inlclusive");
+   overlapVR->GetXaxis()->SetBinLabel(2,"htgVeto");
+   overlapVR->GetXaxis()->SetBinLabel(3,"leptonVeto");
+   overlapVR->GetXaxis()->SetBinLabel(4,"diphotonVeto");
+   overlapVR->GetXaxis()->SetBinLabel(5,"exclusive");
+   overlapVR->GetXaxis()->LabelsOption("v");
+   overlapVR->SetStats(false);
+   gPad->SetBottomMargin(0.2);
+   saver.save(can,"Overlap_VR",true,false);
 }

@@ -121,7 +121,7 @@ std::pair<int,int> getMasses(std::string fileName,Scan_t scan)
    return std::make_pair(std::stoi(m[1]),std::stoi(m[2]));
 }
 
-void runScan_80X(Scan_t scan,bool exclusive)
+void runScan_80X(Scan_t scan,int selection)
 {
    std::map<int,float> mXsecs=getXsecs(scan);
    TString fname=cfg.dataBasePath;
@@ -158,7 +158,10 @@ void runScan_80X(Scan_t scan,bool exclusive)
    UShort_t signal_m1 = 0;
    UShort_t signal_m2 = 0;
    //~ UShort_t signal_nBinos = 0;
-   Int_t nGoodVertices = 0; 
+   Int_t nGoodVertices = 0;
+   ULong64_t evtNo = 0;
+   UInt_t runNo = 0;
+   UInt_t lumNo = 0;
    tree::MET *MET=0;
    tree::MET *genMET=0;
    TTree *tree=(TTree*)file.Get(cfg.treeName);
@@ -178,6 +181,9 @@ void runScan_80X(Scan_t scan,bool exclusive)
    tree->SetBranchAddress("met", &MET);
    tree->SetBranchAddress("met_gen", &genMET);
    tree->SetBranchAddress("nGoodVertices", &nGoodVertices);
+   tree->SetBranchAddress("runNo", &runNo);
+   tree->SetBranchAddress("lumNo", &lumNo);
+   tree->SetBranchAddress("evtNo", &evtNo);
 
    std::string model= "";
    std::map<std::string,int> miAcc,PVlowAll,PVhighAll,PVlowSR,PVhighSR;
@@ -190,6 +196,7 @@ void runScan_80X(Scan_t scan,bool exclusive)
       if (iEvent>processEvents) break;
       if (iEvent%(iEvents/100)==0) {io::log*"."; io::log.flush(); };
       tree->GetEvent(iEvent);
+      if (lumNo!=16984 || evtNo!=7657224) continue;
       model = getModelName(scan, signal_m1, signal_m2);
       
  //              debug << ".......................hier";
@@ -242,10 +249,12 @@ void runScan_80X(Scan_t scan,bool exclusive)
       if (scan == TChiWg || scan == TChiNg){
          for (tree::GenParticle &genP: *genParticles){
             if (fabs(genP.pdgId) > 1000022){
-            EWKinoPair += genP.p;
+               std::cout<<genP.p.Pt()<<"   ";
+               EWKinoPair += genP.p;
             }
          }
          EWKinoPairPt = EWKinoPair.Pt();
+         std::cout<<EWKinoPairPt<<std::endl;
          hISRWeight[model+"_before"].Fill(EWKinoPairPt,fEventWeight);
          if (EWKinoPairPt < 50) {
             fEventWeight*=1;
@@ -439,9 +448,10 @@ void runScan_80X(Scan_t scan,bool exclusive)
          emhtVeto = true;
       }
       //Apply Vetos for GGM combination
-      if(exclusive){
-         if (leptoVeto == true || diphotonVeto == true || emhtVeto == true) continue;
-      }
+      if (selection == 1) { if (leptoVeto == true || diphotonVeto == true || emhtVeto == true) continue;}
+      else if(selection == 2) { if (emhtVeto == true) continue;}
+      else if(selection == 3) { if (leptoVeto == true) continue;}
+      else if(selection == 4) { if (diphotonVeto == true) continue;}
 
       
       // jet related
@@ -594,12 +604,13 @@ void runScan_80X(Scan_t scan,bool exclusive)
     
    io::RootFileReader dataReader(TString::Format("histograms_%s.root",cfg.treeVersion.Data()),TString::Format("danilo_distributions%.1f",cfg.processFraction*100));
    std::string path;
-   if (exclusive){
-      path="pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh/SinglePhoton";
-   }
-   else {
-      path="pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/absphiMETnJetPh/SinglePhoton";
-   }
+   
+   if (selection == 1) path="pre_ph165/c_MET100/MT100/METl300vMTl300/exclusiv/absphiMETnJetPh/SinglePhoton";
+   else if (selection == 2) path="pre_ph165/c_MET100/MT100/METl300vMTl300/htgVeto/absphiMETnJetPh/SinglePhoton";
+   else if (selection == 3) path="pre_ph165/c_MET100/MT100/METl300vMTl300/leptonVeto/absphiMETnJetPh/SinglePhoton";
+   else if (selection == 4) path="pre_ph165/c_MET100/MT100/METl300vMTl300/diphotonVeto/absphiMETnJetPh/SinglePhoton";
+   else path="pre_ph165/c_MET100/MT100/METl300vMTl300/inclusiv/absphiMETnJetPh/SinglePhoton";
+   
    TH1F hData(*dataReader.read<TH1F>(path));
    float const nData=hData.Integral();
 
@@ -608,12 +619,13 @@ void runScan_80X(Scan_t scan,bool exclusive)
    std::map<TString,TGraph2D> grCont;
 
    std::string out;
-   if (exclusive){
-      out=TString::Format("signal_scan_exclusiv_%s.root",cfg.treeVersion.Data());
-   }
-   else {
-      out=TString::Format("signal_scan_inclusiv_%s.root",cfg.treeVersion.Data());
-   }
+   
+   if (selection == 1) out=TString::Format("signal_scan_exclusiv_%s.root",cfg.treeVersion.Data());
+   else if (selection == 2) out=TString::Format("signal_scan_htgVeto_%s.root",cfg.treeVersion.Data());
+   else if (selection == 3) out=TString::Format("signal_scan_leptonVeto_%s.root",cfg.treeVersion.Data());
+   else if (selection == 4) out=TString::Format("signal_scan_diphotonVeto_%s.root",cfg.treeVersion.Data());
+   else out=TString::Format("signal_scan_inclusiv_%s.root",cfg.treeVersion.Data());
+   
    io::RootFileSaver saver_hist(out,"",false);
    TString sVar;
    
@@ -761,13 +773,20 @@ void runScan_80X(Scan_t scan,bool exclusive)
 extern "C"
 void run()
 {
- //   runScan_80X(TChiWg);
+   runScan_80X(TChiWg,0);
     //~ runScan_80X(TChiNg);
-    runScan_80X(T5Wg,false);
+    //~ runScan_80X(T5Wg,0);
+    //~ runScan_80X(T5Wg,2);
+    //~ runScan_80X(T5Wg,3);
+    //~ runScan_80X(T5Wg,4);
     //~ runScan_80X(T5gg);
  //   runScan_80X(T6Wg);
  //   runScan_80X(T6gg);
-  //~ runScan_80X(GGM);
-   //~ runScan_80X(GGM_M1_M2,true);
-   //~ runScan_80X(GGM_M1_M3,false);
+  //~ runScan_80X(GGM,0);
+   //~ runScan_80X(GGM_M1_M2,4);
+   //~ runScan_80X(GGM_M1_M3,0);
+   //~ runScan_80X(GGM_M1_M3,2);
+   //~ runScan_80X(GGM_M1_M3,3);
+   //~ runScan_80X(GGM_M1_M3,4);
+   //int selection: inclusiv=0, exclusiv=1, htg=2, lepton=3, diphoton=4 
 }

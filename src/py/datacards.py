@@ -6,6 +6,7 @@ from array import array
 from operator import add,sub
 import ROOT as rt
 import numpy as np
+from array import array
 
 backgrounds=["GJ","TTcomb","Vg","diboson","efake"]
 
@@ -297,6 +298,8 @@ def fillDatacards(scan):
     }
 
     points=[]
+    list_m1=[]
+    list_m2=[]
     with open(scanFile) as f:
         for p in f.read().split():
             p=p.split(".")[0]
@@ -306,13 +309,64 @@ def fillDatacards(scan):
             elif scan==Scan.GGM_M1_M2 or scan==Scan.GGM_M1_M3:
                 m1,m2=getMasses(p,scan)
             points.append(p)
+            list_m1.append(m1)
+            list_m2.append(m2)
+    
+    if scan==Scan.T5gg or scan==Scan.T5Wg or scan==Scan.T6Wg or scan==Scan.T6gg:
+        y=sorted(list(set(list_m1)))
+        x=sorted(list(set(list_m2)))
+    elif scan==Scan.GGM_M1_M2 or scan==Scan.GGM_M1_M3:
+        x=sorted(list(set(list_m1)))
+        y=sorted(list(set(list_m2)))
+        
+    #2D Signal-Histograms for combination
+    hist_SigRate_0=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigRate_1=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigRate_2=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigRate_3=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    
+    hist_SigStat_0=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigStat_1=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigStat_2=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigStat_3=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    
+    hist_SigSys_0=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigSys_1=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigSys_2=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigSys_3=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    
+    hist_SigISR_0=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigISR_1=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigISR_2=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    hist_SigISR_3=rt.TH2F("","",len(x)-1,array("f",x),len(y)-1,array("f",y))
+    
+    hist_GJStat=rt.TH1F("","",4,-0.5,3.5)
+    hist_TTcombStat=rt.TH1F("","",4,-0.5,3.5)
+    hist_VgStat=rt.TH1F("","",4,-0.5,3.5)
+    hist_DibosonStat=rt.TH1F("","",4,-0.5,3.5)
+    hist_EfakeStat=rt.TH1F("","",4,-0.5,3.5)
+    
+    hist_TTcombSys=rt.TH1F("","",4,-0.5,3.5)
+    hist_DibosonSys=rt.TH1F("","",4,-0.5,3.5)
+    hist_GJSys=rt.TH1F("","",4,-0.5,3.5)
+    hist_EfakeSys=rt.TH1F("","",4,-0.5,3.5)
+    
+    hist_corGJ=rt.TH1F("","",4,-0.5,3.5)
+    hist_corVg=rt.TH1F("","",4,-0.5,3.5)
+    hist_trigger=rt.TH1F("","",4,-0.5,3.5)
+    hist_phSF=rt.TH1F("","",4,-0.5,3.5)
+    hist_lumi=rt.TH1F("","",4,-0.5,3.5)
+    hist_GJFit=rt.TH1F("","",4,-0.5,3.5)
+    hist_VgFit=rt.TH1F("","",4,-0.5,3.5)
 
     for i,point in enumerate(points):
         print point
         if scan==Scan.GGM_M1_M2 or scan==Scan.GGM_M1_M3:
             m1,m2=getMasses(point,scan)
+            x_val,y_val=m1,m2
         else:
             m2,m1=getMasses(point,scan)
+            x_val,y_val=m2,m1
         key=m2
         if scan==Scan.GGM: key=m2*100000+m1
         sigYield=getSignalYield(point,sScan)
@@ -340,23 +394,110 @@ def fillDatacards(scan):
         # avoid negative counts
         c["sig"]=[max(0,x) for x in c["sig"]]
         datacard=prepareDatacard(obs,c,st,sy,sISR,cor,mcUncertainties,point,sScan)
+        
+        i=0
+        for hist in [hist_SigRate_0,hist_SigRate_1,hist_SigRate_2,hist_SigRate_3]:
+            hist.Fill(x_val,y_val,c["sig"][i])
+            i+=1
+        i=0
+        for hist in [hist_SigStat_0,hist_SigStat_1,hist_SigStat_2,hist_SigStat_3]:
+            hist.Fill(x_val,y_val,st["sig"][i])
+            i+=1
+        i=0
+        for hist in [hist_SigSys_0,hist_SigSys_1,hist_SigSys_2,hist_SigSys_3]:
+            hist.Fill(x_val,y_val,sy["sig"][i])
+            i+=1
+        i=0
+        for hist in [hist_SigISR_0,hist_SigISR_1,hist_SigISR_2,hist_SigISR_3]:
+            hist.Fill(x_val,y_val,sISR["sig"][i])
+            i+=1
+    
+    for i in xrange(4):
+        hist_GJStat.Fill(i,st["GJ"][i])
+        hist_TTcombStat.Fill(i,st["TTcomb"][i])
+        hist_VgStat.Fill(i,st["Vg"][i])
+        hist_DibosonStat.Fill(i,st["diboson"][i])
+        hist_EfakeStat.Fill(i,st["efake"][i])
+    
+        hist_TTcombSys.Fill(i,sy["TTcomb"][i])
+        hist_DibosonSys.Fill(i,sy["diboson"][i])
+        hist_GJSys.Fill(i,sy["GJ"][i])
+        hist_EfakeSys.Fill(i,sy["efake"][i])
+    
+        hist_corGJ.Fill(i,cor["GJ"][i])
+        hist_corVg.Fill(i,cor["Vg"][i])
+        hist_trigger.Fill(i,mcUncertainties["trigger"])
+        hist_phSF.Fill(i,mcUncertainties["phSF"])
+        hist_lumi.Fill(i,mcUncertainties["lumi"])
+    
+    hist_GJFit.Fill(0,1.097)
+    hist_GJFit.Fill(1,1.0797)
+    hist_GJFit.Fill(2,1.0912)
+    hist_GJFit.Fill(3,1.335)
+    hist_VgFit.Fill(0,1.0722)
+    hist_VgFit.Fill(1,1.08045)
+    hist_VgFit.Fill(2,1.08787)
+    hist_VgFit.Fill(3,1.110)
+        
+        
+    RootOut=rt.TFile(outdir+"SignalTrees/SignalTree_"+sScan+"_"+selection+".root","update")
+    
+    i=0
+    for hist in [hist_SigRate_0,hist_SigRate_1,hist_SigRate_2,hist_SigRate_3]:
+        hist.Write("SignalRate_bin"+str(i),rt.TObject.kOverwrite)
+        i+=1
+    i=0
+    for hist in [hist_SigStat_0,hist_SigStat_1,hist_SigStat_2,hist_SigStat_3]:
+        hist.Write("SignalStat_bin"+str(i),rt.TObject.kOverwrite)
+        i+=1
+    i=0
+    for hist in [hist_SigSys_0,hist_SigSys_1,hist_SigSys_2,hist_SigSys_3]:
+        hist.Write("SignalSys_bin"+str(i),rt.TObject.kOverwrite)
+        i+=1
+    i=0
+    for hist in [hist_SigISR_0,hist_SigISR_1,hist_SigISR_2,hist_SigISR_3]:
+        hist.Write("SignalISR_bin"+str(i),rt.TObject.kOverwrite)
+        i+=1
+    
+    hist_GJStat.Write("Stat_GJ",rt.TObject.kOverwrite)
+    hist_TTcombStat.Write("Stat_TTcomb",rt.TObject.kOverwrite)
+    hist_VgStat.Write("Stat_Vg",rt.TObject.kOverwrite)
+    hist_DibosonStat.Write("Stat_Diboson",rt.TObject.kOverwrite)
+    hist_EfakeStat.Write("Stat_Efake",rt.TObject.kOverwrite)
+    
+    hist_TTcombSys.Write("Sys_TTcomb",rt.TObject.kOverwrite)
+    hist_DibosonSys.Write("Sys_Diboson",rt.TObject.kOverwrite)
+    hist_GJSys.Write("Sys_GJ",rt.TObject.kOverwrite)
+    hist_EfakeSys.Write("Sys_Efake",rt.TObject.kOverwrite)
+    
+    hist_corGJ.Write("Corr_GJ",rt.TObject.kOverwrite)
+    hist_corVg.Write("Corr_Vg",rt.TObject.kOverwrite)
+    hist_trigger.Write("Trigger",rt.TObject.kOverwrite)
+    hist_phSF.Write("PhSF",rt.TObject.kOverwrite)
+    hist_lumi.Write("Lumi",rt.TObject.kOverwrite)
+    hist_GJFit.Write("Fit_GJ",rt.TObject.kOverwrite)
+    hist_VgFit.Write("Fit_Vg",rt.TObject.kOverwrite)
+    RootOut.Close()
 
 
 if __name__ == '__main__':
-    #~ selection="exclusiv"
-    selection="inclusiv"
+    selection="exclusiv"
+    #~ selection="inclusiv"
+    #~ selection="htgVeto"
+    #~ selection="leptonVeto"
+    #~ selection="diphotonVeto"
     basedir="../"
     outdir=basedir+"output/"
     signal_scan="signal_scan_"+selection+"_v03D.root"
     rho=-0.0
     #~ fillDatacards(Scan.T5gg)
-    #~ fillDatacards(Scan.T5Wg)
+    fillDatacards(Scan.T5Wg)
     #~ fillDatacards(Scan.T6Wg)
     #~ fillDatacards(Scan.T6gg)
     #~ fillDatacards(Scan.GGM)
     #~ fillDatacards(Scan.TChiWg)
     #~ fillDatacards(Scan.TChiNg)
-    #~ fillDatacards(Scan.GGM_M1_M2)
-    fillDatacards(Scan.GGM_M1_M3)
+    fillDatacards(Scan.GGM_M1_M2)
+    #~ fillDatacards(Scan.GGM_M1_M3)
 
 

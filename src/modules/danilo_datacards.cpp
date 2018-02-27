@@ -1,5 +1,5 @@
 /*
- * limit calculation using the Higgs combine tool
+ * Create Datacards
  */
 
 #include "Config.hpp"

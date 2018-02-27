@@ -19,7 +19,7 @@ void run()
 {     
       for (TString scan :{"GGM_M1_M2","GGM_M1_M3","T5Wg"}) {
             
-            for (TString selection :{"exclusiv","inclusiv"}) {
+            for (TString selection :{"exclusiv","inclusiv","htgVeto","leptonVeto","diphotonVeto"}) {
                   
                   TFile file("../output/signal_scan_"+selection+"_v03D.root","read");
                   
