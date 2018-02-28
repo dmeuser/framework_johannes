@@ -196,7 +196,6 @@ void runScan_80X(Scan_t scan,int selection)
       if (iEvent>processEvents) break;
       if (iEvent%(iEvents/100)==0) {io::log*"."; io::log.flush(); };
       tree->GetEvent(iEvent);
-      if (lumNo!=16984 || evtNo!=7657224) continue;
       model = getModelName(scan, signal_m1, signal_m2);
       
  //              debug << ".......................hier";
@@ -773,8 +772,8 @@ void runScan_80X(Scan_t scan,int selection)
 extern "C"
 void run()
 {
-   runScan_80X(TChiWg,0);
-    //~ runScan_80X(TChiNg);
+   //~ runScan_80X(TChiWg,0);
+    runScan_80X(TChiNg,0);
     //~ runScan_80X(T5Wg,0);
     //~ runScan_80X(T5Wg,2);
     //~ runScan_80X(T5Wg,3);
